@@ -1,0 +1,48 @@
+name: Push Coder Templates
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "templates/**"
+  workflow_dispatch:
+
+env:
+  CODER_URL: https://code.simplelumine.com
+
+jobs:
+  detect-templates:
+    runs-on: ubuntu-latest
+    outputs:
+      templates: ${{ steps.find.outputs.templates }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: find
+        run: |
+          TEMPLATES=$(find templates -maxdepth 2 -name "main.tf" -printf '%h\n' | \
+            sed 's|templates/||' | \
+            jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "templates=$TEMPLATES" >> "$GITHUB_OUTPUT"
+          echo "Found templates: $TEMPLATES"
+
+  push-templates:
+    needs: detect-templates
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        template: ${{ fromJson(needs.detect-templates.outputs.templates) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Coder CLI
+        uses: coder/setup-action@v1
+        with:
+          access_url: ${{ env.CODER_URL }}
+          coder_session_token: ${{ secrets.CODER_SESSION_TOKEN }}
+
+      - name: Push ${{ matrix.template }} template
+        run: |
+          coder templates push ${{ matrix.template }} \
+            -d ./templates/${{ matrix.template }} \
+            --yes \
+            --message "auto: ${{ github.sha }}"

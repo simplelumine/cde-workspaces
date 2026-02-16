@@ -192,15 +192,6 @@ module "antigravity" {
   # folder = "/home/coder"
 }
 
-# Git Clone
-module "git_clone" {
-  source   = "registry.coder.com/coder/git-clone/coder"
-  version  = "1.2.3"
-  agent_id = coder_agent.main.id
-  url      = "https://github.com/simplelumine/k8s-gitops"
-  base_dir = "/home/coder/project"
-}
-
 data "coder_external_auth" "github" {
   id = "primary-github"
 }

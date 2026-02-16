@@ -14,13 +14,52 @@ jobs:
       templates: ${{ steps.find.outputs.templates }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - id: find
         run: |
-          TEMPLATES=$(find templates -maxdepth 2 -name "main.tf" -printf '%h\n' | \
-            sed 's|templates/||' | \
-            jq -R -s -c 'split("\n") | map(select(length > 0))')
-          echo "templates=$TEMPLATES" >> "$GITHUB_OUTPUT"
-          echo "Found templates: $TEMPLATES"
+          # Check if we are in a PR or Push event to determine the range
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          elif [ "${{ github.event_name }}" == "push" ]; then
+            BASE_SHA="${{ github.event.before }}"
+            HEAD_SHA="${{ github.event.after }}"
+          else
+            # Manual dispatch or other event (e.g. schedule) - push all templates
+            echo "Manual trigger or unknown event. Pushing all templates."
+            TEMPLATES=$(find templates -maxdepth 2 -name "main.tf" -printf '%h\n' | \
+              sed 's|templates/||' | \
+              jq -R -s -c 'split("\n") | map(select(length > 0))')
+            echo "templates=$TEMPLATES" >> "$GITHUB_OUTPUT"
+            echo "Found templates: $TEMPLATES"
+            exit 0
+          fi
+
+          # Fetch depth to ensure we have history for diff
+          git fetch --depth=100 origin +refs/heads/main:refs/remotes/origin/main
+
+          # Get changed files
+          # Handle force push or new branch creation where before sha might be 0s
+          if [ "$BASE_SHA" == "0000000000000000000000000000000000000000" ]; then
+              # Look back 1 commit if new branch
+              CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+          else
+              CHANGED_FILES=$(git diff --name-only $BASE_SHA $HEAD_SHA)
+          fi
+
+          # Filter for template directories
+          # Sort and unique to avoid duplicates
+          TEMPLATES=$(echo "$CHANGED_FILES" | grep '^templates/' | cut -d/ -f2 | sort | uniq | jq -R -s -c 'split("\n") | map(select(length > 0))')
+
+          # Fallback to empty array if no templates changed, to avoid JSON errors
+          if [ -z "$TEMPLATES" ] || [ "$TEMPLATES" == "[]" ]; then
+              echo "No templates changed."
+              echo "templates=[]" >> "$GITHUB_OUTPUT"
+          else
+              echo "templates=$TEMPLATES" >> "$GITHUB_OUTPUT"
+              echo "Found changed templates: $TEMPLATES"
+          fi
 
   push-templates:
     needs: detect-templates

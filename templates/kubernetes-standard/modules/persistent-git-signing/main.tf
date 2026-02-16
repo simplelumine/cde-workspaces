@@ -34,7 +34,16 @@ resource "coder_script" "configure_git_signing" {
     
     if [ -n "$KEY" ]; then
       mkdir -p ~/.ssh
-      echo "$KEY" > ~/.ssh/signing_key
+      
+      # Clean up the key: remove headers/footers and all whitespace (including newlines/spaces)
+      # This fixes issues where copy-pasting into the parameter removes newlines or adds spaces.
+      CLEAN_KEY=$(echo "$KEY" | sed 's/-----BEGIN OPENSSH PRIVATE KEY-----//' | sed 's/-----END OPENSSH PRIVATE KEY-----//' | tr -d '[:space:]')
+      
+      # Reassemble the key with proper headers
+      echo "-----BEGIN OPENSSH PRIVATE KEY-----" > ~/.ssh/signing_key
+      echo "$CLEAN_KEY" >> ~/.ssh/signing_key
+      echo "-----END OPENSSH PRIVATE KEY-----" >> ~/.ssh/signing_key
+      
       chmod 600 ~/.ssh/signing_key
       
       # Configure Git to use this key

@@ -7,9 +7,6 @@ on:
       - "templates/**"
   workflow_dispatch:
 
-env:
-  CODER_URL: https://code.simplelumine.com
-
 jobs:
   detect-templates:
     runs-on: ubuntu-latest
@@ -37,7 +34,7 @@ jobs:
       - name: Setup Coder CLI
         uses: coder/setup-action@v1
         with:
-          access_url: ${{ env.CODER_URL }}
+          access_url: ${{ vars.CODER_URL }}
           coder_session_token: ${{ secrets.CODER_SESSION_TOKEN }}
 
       - name: Push and Update ${{ matrix.template }} template
@@ -56,11 +53,13 @@ jobs:
           if [ -f "$README" ]; then
             # Parse values and strip potential surrounding quotes
             DISPLAY_NAME=$(grep "^display_name:" "$README" | sed 's/^display_name: *//' | sed 's/^"//;s/"$//' | tr -d '\r')
+            DESCRIPTION=$(grep "^description:" "$README" | sed 's/^description: *//' | sed 's/^"//;s/"$//' | tr -d '\r')
             ICON=$(grep "^icon:" "$README" | sed 's/^icon: *//' | sed 's/^"//;s/"$//' | tr -d '\r')
             
             # Construct edit arguments
             ARGS=""
             if [ ! -z "$DISPLAY_NAME" ]; then ARGS="$ARGS --display-name \"$DISPLAY_NAME\""; fi
+            if [ ! -z "$DESCRIPTION" ]; then ARGS="$ARGS --description \"$DESCRIPTION\""; fi
             if [ ! -z "$ICON" ]; then ARGS="$ARGS --icon \"$ICON\""; fi
             
             # Update template metadata if args exist

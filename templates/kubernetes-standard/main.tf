@@ -201,12 +201,13 @@ module "git-config" {
   agent_id = coder_agent.main.id
 }
 
-module "git-commit-signing" {
-  count    = data.coder_workspace.me.start_count
-  source   = "registry.coder.com/coder/git-commit-signing/coder"
-  version  = "1.0.32"
+
+module "persistent-git-signing" {
+  source   = "./modules/persistent-git-signing"
   agent_id = coder_agent.main.id
 }
+
+
 
 module "github-upload-public-key" {
   source   = "registry.coder.com/coder/github-upload-public-key/coder"

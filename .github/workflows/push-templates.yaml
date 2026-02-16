@@ -40,8 +40,9 @@ jobs:
           access_url: ${{ env.CODER_URL }}
           coder_session_token: ${{ secrets.CODER_SESSION_TOKEN }}
 
-      - name: Push ${{ matrix.template }} template
+      - name: Push and Update ${{ matrix.template }} template
         run: |
+          # Push the template (creates/updates version)
           coder templates push ${{ matrix.template }} \
             -d ./templates/${{ matrix.template }} \
             --variable namespace=${{ vars.CODER_NAMESPACE }} \
@@ -49,3 +50,23 @@ jobs:
             --variable gemini_base_url=${{ vars.GEMINI_BASE_URL }} \
             --yes \
             --message "auto: ${{ github.sha }}"
+            
+          # Extract metadata from README.md frontmatter
+          README="./templates/${{ matrix.template }}/README.md"
+          if [ -f "$README" ]; then
+            # Parse values and strip potential surrounding quotes
+            DISPLAY_NAME=$(grep "^display_name:" "$README" | sed 's/^display_name: *//' | sed 's/^"//;s/"$//' | tr -d '\r')
+            ICON=$(grep "^icon:" "$README" | sed 's/^icon: *//' | sed 's/^"//;s/"$//' | tr -d '\r')
+            
+            # Construct edit arguments
+            ARGS=""
+            if [ ! -z "$DISPLAY_NAME" ]; then ARGS="$ARGS --display-name \"$DISPLAY_NAME\""; fi
+            if [ ! -z "$ICON" ]; then ARGS="$ARGS --icon \"$ICON\""; fi
+            
+            # Update template metadata if args exist
+            if [ ! -z "$ARGS" ]; then
+              echo "Updating metadata for ${{ matrix.template }}..."
+              # Use eval to handle quoted arguments correctly
+              eval "coder templates edit ${{ matrix.template }} $ARGS --yes"
+            fi
+          fi

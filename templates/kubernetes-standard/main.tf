@@ -184,7 +184,6 @@ resource "coder_agent" "main" {
   }
 }
 
-# antigravity
 module "antigravity" {
   source   = "registry.coder.com/coder/antigravity/coder"
   version  = "1.0.0"

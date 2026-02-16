@@ -18,11 +18,8 @@ jobs:
           fetch-depth: 0
       - id: find
         run: |
-          # Check if we are in a PR or Push event to determine the range
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            BASE_SHA="${{ github.event.pull_request.base.sha }}"
-            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
-          elif [ "${{ github.event_name }}" == "push" ]; then
+          # Check if we are in a Push event to determine the range
+          if [ "${{ github.event_name }}" == "push" ]; then
             BASE_SHA="${{ github.event.before }}"
             HEAD_SHA="${{ github.event.after }}"
           else

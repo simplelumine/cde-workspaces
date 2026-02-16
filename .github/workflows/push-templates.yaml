@@ -79,8 +79,6 @@ jobs:
           coder templates push ${{ matrix.template }} \
             -d ./templates/${{ matrix.template }} \
             --variable namespace=${{ vars.CODER_NAMESPACE }} \
-            --variable gemini_api_key=${{ secrets.GEMINI_API_KEY }} \
-            --variable gemini_base_url=${{ vars.GEMINI_BASE_URL }} \
             --yes \
             --message "auto: ${{ github.sha }}"
             

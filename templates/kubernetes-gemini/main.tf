@@ -196,16 +196,8 @@ data "coder_external_auth" "github" {
   id = "primary-github"
 }
 
-module "git-config" {
-  source   = "registry.coder.com/coder/git-config/coder"
-  version  = "1.0.33"
-  agent_id = coder_agent.main.id
-}
-
-module "git-commit-signing" {
-  count    = data.coder_workspace.me.start_count
-  source   = "registry.coder.com/coder/git-commit-signing/coder"
-  version  = "1.0.32"
+module "git-signing" {
+  source   = "./modules/git-signing"
   agent_id = coder_agent.main.id
 }
 
@@ -217,17 +209,24 @@ module "github-upload-public-key" {
 }
 
 # Gemini CLI
-variable "gemini_api_key" {
-  type        = string
-  description = "Gemini API Key"
-  sensitive   = true
-  default     = ""
+data "coder_parameter" "gemini_api_key" {
+  name         = "gemini_api_key"
+  display_name = "Gemini API Key"
+  description  = "Your Gemini API Key"
+  default      = ""
+  mutable      = true
+  type         = "string"
+  icon         = "/icon/gemini.svg"
 }
 
-variable "gemini_base_url" {
-  type        = string
-  description = "Custom base URL for Gemini API (e.g., a proxy endpoint)"
-  default     = ""
+data "coder_parameter" "gemini_base_url" {
+  name         = "gemini_base_url"
+  display_name = "Gemini Base URL"
+  description  = "Custom base URL for Gemini API (e.g., a proxy endpoint). Leave empty for default."
+  default      = ""
+  mutable      = true
+  type         = "string"
+  icon         = "/icon/link.svg"
 }
 
 module "gemini" {
@@ -235,8 +234,8 @@ module "gemini" {
   source           = "./modules/gemini"
   agent_id         = coder_agent.main.id
   folder           = "/home/coder/project"
-  gemini_api_key   = var.gemini_api_key
-  gemini_base_url  = var.gemini_base_url
+  gemini_api_key   = data.coder_parameter.gemini_api_key.value
+  gemini_base_url  = data.coder_parameter.gemini_base_url.value
 }
 
 # code-server

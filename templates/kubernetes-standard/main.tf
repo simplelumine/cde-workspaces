@@ -201,13 +201,10 @@ module "git-config" {
   agent_id = coder_agent.main.id
 }
 
-
-module "persistent-git-signing" {
-  source   = "./modules/persistent-git-signing"
+module "git-signing" {
+  source   = "./modules/git-signing"
   agent_id = coder_agent.main.id
 }
-
-
 
 module "github-upload-public-key" {
   source   = "registry.coder.com/coder/github-upload-public-key/coder"

@@ -39,10 +39,6 @@ data "coder_parameter" "cpu" {
   icon         = "/icon/memory.svg"
   mutable      = true
   option {
-    name  = "1 Cores"
-    value = "1"
-  }
-  option {
     name  = "2 Cores"
     value = "2"
   }
@@ -67,10 +63,6 @@ data "coder_parameter" "memory" {
   default      = "2"
   icon         = "/icon/memory.svg"
   mutable      = true
-  option {
-    name  = "1 GB"
-    value = "1"
-  }
   option {
     name  = "2 GB"
     value = "2"

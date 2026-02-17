@@ -34,8 +34,7 @@ resource "coder_script" "git_clone" {
   run_on_start = true
   script       = <<EOT
     #!/bin/bash
-    set -e
-
+    
     REPOS="${data.coder_parameter.git_repos.value}"
     BASE_DIR="${var.base_dir}"
 
@@ -53,6 +52,26 @@ resource "coder_script" "git_clone" {
     # Split by comma
     IFS=',' read -ra REPO_LIST <<< "$REPOS"
 
+    clone_repo() {
+      local repo_url=$1
+      local max_retries=10
+      local wait_time=2 # seconds
+
+      for ((i=1; i<=max_retries; i++)); do
+        echo "Attempt $i/$max_retries: Cloning $repo_url..."
+        if git clone "$repo_url"; then
+          echo "Successfully cloned $repo_url"
+          return 0
+        else
+          echo "Clone failed. Retrying in $wait_time seconds..."
+          sleep $wait_time
+        fi
+      done
+      
+      echo "Failed to clone $repo_url after $max_retries attempts."
+      return 1
+    }
+
     for REPO in "$${REPO_LIST[@]}"; do
       # Trim whitespace
       REPO=$(echo "$REPO" | xargs)
@@ -67,8 +86,7 @@ resource "coder_script" "git_clone" {
       if [ -d "$REPO_NAME" ]; then
         echo "Repository $REPO_NAME already exists. Skipping..."
       else
-        echo "Cloning $REPO..."
-        git clone "$REPO"
+        clone_repo "$REPO"
       fi
     done
   EOT

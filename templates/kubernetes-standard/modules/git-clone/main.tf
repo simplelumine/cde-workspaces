@@ -17,6 +17,13 @@ variable "base_dir" {
   default     = "~"
 }
 
+variable "github_access_token" {
+  type        = string
+  description = "GitHub access token for cloning private repos."
+  default     = ""
+  sensitive   = true
+}
+
 data "coder_parameter" "git_repos" {
   name         = "git_repos"
   display_name = "Git Repositories"
@@ -34,9 +41,10 @@ resource "coder_script" "git_clone" {
   run_on_start = true
   script       = <<EOT
     #!/bin/bash
-    
+
     REPOS="${data.coder_parameter.git_repos.value}"
     BASE_DIR="${var.base_dir}"
+    GITHUB_TOKEN="${var.github_access_token}"
 
     # Expand tilde if present
     eval BASE_DIR=$BASE_DIR
@@ -46,38 +54,22 @@ resource "coder_script" "git_clone" {
       exit 0
     fi
 
+    # Configure git to use the token for GitHub authentication
+    if [ -n "$GITHUB_TOKEN" ]; then
+      echo "Configuring GitHub authentication..."
+      git config --global url."https://oauth2:$${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+    fi
+
     mkdir -p "$BASE_DIR"
     cd "$BASE_DIR"
 
     # Split by comma
     IFS=',' read -ra REPO_LIST <<< "$REPOS"
 
-    clone_repo() {
-      local repo_url=$1
-      local max_retries=10
-      local wait_time=2 # seconds
-
-      for ((i=1; i<=max_retries; i++)); do
-        echo "Attempt $i/$max_retries: Cloning $repo_url..."
-        if git clone "$repo_url"; then
-          echo "Successfully cloned $repo_url"
-          return 0
-        else
-          echo "Clone failed. Retrying in $wait_time seconds..."
-          sleep $wait_time
-          # Exponential backoff? Or just linear wait to let agent connect
-          # wait_time=$((wait_time * 2))
-        fi
-      done
-      
-      echo "Failed to clone $repo_url after $max_retries attempts."
-      return 1
-    }
-
     for REPO in "$${REPO_LIST[@]}"; do
       # Trim whitespace
       REPO=$(echo "$REPO" | xargs)
-      
+
       if [ -z "$REPO" ]; then
         continue
       fi
@@ -88,8 +80,15 @@ resource "coder_script" "git_clone" {
       if [ -d "$REPO_NAME" ]; then
         echo "Repository $REPO_NAME already exists. Skipping..."
       else
-        clone_repo "$REPO"
+        echo "Cloning $REPO..."
+        git clone "$REPO"
       fi
     done
+
+    # Clean up: remove the token-based URL rewrite so future git operations
+    # use the normal Coder credential helper (which will be ready by then)
+    if [ -n "$GITHUB_TOKEN" ]; then
+      git config --global --unset-all url."https://oauth2:$${GITHUB_TOKEN}@github.com/".insteadOf || true
+    fi
   EOT
 }

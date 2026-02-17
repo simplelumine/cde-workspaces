@@ -199,9 +199,10 @@ module "git-signing" {
 }
 
 module "git-clone" {
-  source   = "./modules/git-clone"
-  agent_id = coder_agent.main.id
-  base_dir = "/home/coder/projects"
+  source              = "./modules/git-clone"
+  agent_id            = coder_agent.main.id
+  base_dir            = "/home/coder/projects"
+  github_access_token = data.coder_external_auth.github.access_token
 }
 
 module "github-upload-public-key" {

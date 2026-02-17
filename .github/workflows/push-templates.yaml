@@ -33,8 +33,6 @@ jobs:
             exit 0
           fi
 
-          # Fetch depth to ensure we have history for diff
-          git fetch --depth=100 origin +refs/heads/main:refs/remotes/origin/main
 
           # Get changed files
           # Handle force push or new branch creation where before sha might be 0s

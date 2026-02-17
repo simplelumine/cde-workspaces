@@ -18,6 +18,7 @@ data "coder_parameter" "git_signing_key" {
   default     = ""
   mutable     = true
   type        = "string"
+  form_type   = "textarea"
   icon        = "/icon/github.svg"
 }
 

@@ -163,21 +163,23 @@ resource "coder_agent" "main" {
       fi
     fi
 
-    # Inject Kubeconfig (Base64 encoded)
+    # Inject Kubeconfig
     if [ -n "${data.coder_parameter.kubeconfig.value}" ]; then
       echo "Injecting Kubeconfig..."
       mkdir -p ~/.kube
-      echo "${data.coder_parameter.kubeconfig.value}" | base64 -d > ~/.kube/config
+      cat > ~/.kube/config <<'KUBECONFIG_EOF'
+${data.coder_parameter.kubeconfig.value}
+KUBECONFIG_EOF
       chmod 600 ~/.kube/config
     fi
 
     # Inject SOPS Age Key
-    # Supports multiline format with comment lines (# created: ... / # public key: ...)
-    # Handles both newline-preserved and newline-stripped input from Coder UI
     if [ -n "${data.coder_parameter.sops_age_key.value}" ]; then
       echo "Injecting SOPS Age Key..."
       mkdir -p ~/.config/sops/age
-      echo "${data.coder_parameter.sops_age_key.value}" | sed 's/\(# \)/\n\1/g; s/\(AGE-SECRET-KEY-\)/\n\1/g' | grep -v '^$$' > ~/.config/sops/age/keys.txt
+      cat > ~/.config/sops/age/keys.txt <<'SOPS_EOF'
+${data.coder_parameter.sops_age_key.value}
+SOPS_EOF
       chmod 600 ~/.config/sops/age/keys.txt
     fi
   EOT
@@ -258,10 +260,11 @@ data "coder_parameter" "install_k8s_tools" {
 
 data "coder_parameter" "kubeconfig" {
   name         = "kubeconfig"
-  display_name = "Kubeconfig (Base64)"
-  description  = "Paste your Base64-encoded kubeconfig (run: cat ~/.kube/config | base64 -w0)"
+  display_name = "Kubeconfig"
+  description  = "Paste your kubeconfig YAML content"
   default      = ""
   type         = "string"
+  form_type    = "textarea"
   mutable      = true
   icon         = "/icon/k8s.png"
 }
@@ -269,9 +272,10 @@ data "coder_parameter" "kubeconfig" {
 data "coder_parameter" "sops_age_key" {
   name         = "sops_age_key"
   display_name = "SOPS Age Key"
-  description  = "Paste your SOPS Age private key (supports comment lines, e.g. # created: ... + AGE-SECRET-KEY-...)"
+  description  = "Paste your SOPS Age private key content"
   default      = ""
   type         = "string"
+  form_type    = "textarea"
   mutable      = true
   icon         = "/icon/k8s.png"
 }

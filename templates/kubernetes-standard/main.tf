@@ -108,7 +108,7 @@ resource "coder_agent" "main" {
   arch           = "amd64"
   startup_script = <<-EOT
     set -e
-    # Ensure .bashre exs
+    # Ensure .bashrc exists
     touch ~/.bashrc
 
     # Install the latest code-server.

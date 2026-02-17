@@ -198,6 +198,12 @@ module "git-signing" {
   agent_id = coder_agent.main.id
 }
 
+module "git-clone" {
+  source   = "./modules/git-clone"
+  agent_id = coder_agent.main.id
+  base_dir = "/home/coder/projects"
+}
+
 module "github-upload-public-key" {
   source   = "registry.coder.com/coder/github-upload-public-key/coder"
   version  = "1.0.32"

@@ -226,7 +226,7 @@ data "coder_parameter" "gemini_base_url" {
   default      = ""
   mutable      = true
   type         = "string"
-  icon         = "/icon/link.svg"
+  icon         = "/icon/gemini.svg"
 }
 
 module "gemini" {

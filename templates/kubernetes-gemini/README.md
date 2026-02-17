@@ -1,7 +1,7 @@
 ---
 display_name: Kubernetes (Gemini)
 description: Full-featured workspace with Gemini CLI AI assistant and Git integration
-icon: https://raw.githubusercontent.com/cncf/artwork/master/projects/kubernetes/icon/color/kubernetes-icon-color.svg
+icon: ../../../site/static/icon/k8s.png
 verified: true
 tags: [kubernetes, ai, gemini, git]
 ---

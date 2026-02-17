@@ -1,7 +1,7 @@
 ---
 display_name: Kubernetes (Standard)
 description: Standard development environment with Git configuration and essential tools
-icon: https://raw.githubusercontent.com/cncf/artwork/master/projects/kubernetes/icon/color/kubernetes-icon-color.svg
+icon: ../../../site/static/icon/k8s.png
 verified: true
 tags: [kubernetes, git, standard]
 ---

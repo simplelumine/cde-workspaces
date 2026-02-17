@@ -19,7 +19,6 @@ data "coder_parameter" "git_signing_key" {
   mutable     = true
   type        = "string"
   icon        = "/icon/github.svg"
-  sensitive   = true
 }
 
 resource "coder_script" "configure_git_signing" {

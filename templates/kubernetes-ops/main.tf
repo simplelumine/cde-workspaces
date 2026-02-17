@@ -264,7 +264,6 @@ data "coder_parameter" "kubeconfig" {
   type         = "string"
   mutable      = true
   icon         = "/icon/k8s.png"
-  sensitive    = true
 }
 
 data "coder_parameter" "sops_age_key" {
@@ -275,7 +274,6 @@ data "coder_parameter" "sops_age_key" {
   type         = "string"
   mutable      = true
   icon         = "/icon/k8s.png"
-  sensitive    = true
 }
 
 data "coder_external_auth" "github" {

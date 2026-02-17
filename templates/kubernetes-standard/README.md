@@ -1,7 +1,7 @@
 ---
 display_name: Kubernetes (Standard)
 description: Standard development environment with Git configuration and essential tools
-icon: ../../../site/static/icon/k8s.png
+icon: /icon/k8s.png
 verified: true
 tags: [kubernetes, git, standard]
 ---

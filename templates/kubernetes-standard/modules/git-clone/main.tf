@@ -17,13 +17,6 @@ variable "base_dir" {
   default     = "~"
 }
 
-variable "github_access_token" {
-  type        = string
-  description = "GitHub access token for cloning private repos."
-  default     = ""
-  sensitive   = true
-}
-
 data "coder_parameter" "git_repos" {
   name         = "git_repos"
   display_name = "Git Repositories"
@@ -44,7 +37,6 @@ resource "coder_script" "git_clone" {
 
     REPOS="${data.coder_parameter.git_repos.value}"
     BASE_DIR="${var.base_dir}"
-    GITHUB_TOKEN="${var.github_access_token}"
 
     # Expand tilde if present
     eval BASE_DIR=$BASE_DIR
@@ -52,12 +44,6 @@ resource "coder_script" "git_clone" {
     if [ -z "$REPOS" ]; then
       echo "No repositories to clone."
       exit 0
-    fi
-
-    # Configure git to use the token for GitHub authentication
-    if [ -n "$GITHUB_TOKEN" ]; then
-      echo "Configuring GitHub authentication..."
-      git config --global url."https://oauth2:$${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
     fi
 
     mkdir -p "$BASE_DIR"
@@ -81,14 +67,15 @@ resource "coder_script" "git_clone" {
         echo "Repository $REPO_NAME already exists. Skipping..."
       else
         echo "Cloning $REPO..."
-        git clone "$REPO"
+        if git clone "$REPO"; then
+          echo "Successfully cloned $REPO"
+        else
+          echo "⚠️  Failed to clone $REPO (likely private). Please run manually:"
+          echo "git clone $REPO $BASE_DIR/$REPO_NAME"
+          # Clean up partial directory
+          rm -rf "$REPO_NAME"
+        fi
       fi
     done
-
-    # Clean up: remove the token-based URL rewrite so future git operations
-    # use the normal Coder credential helper (which will be ready by then)
-    if [ -n "$GITHUB_TOKEN" ]; then
-      git config --global --unset-all url."https://oauth2:$${GITHUB_TOKEN}@github.com/".insteadOf || true
-    fi
   EOT
 }

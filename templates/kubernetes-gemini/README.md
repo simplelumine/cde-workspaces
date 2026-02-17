@@ -6,7 +6,7 @@ verified: true
 tags: [kubernetes, ai, gemini, git]
 ---
 
-# Kubernetes (AI Enhanced) ❤️
+# Kubernetes (Gemini) ❤️
 
 Advanced development workspace supercharged with Google Gemini AI. Built with love for you.
 

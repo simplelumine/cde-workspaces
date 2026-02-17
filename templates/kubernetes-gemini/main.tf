@@ -117,6 +117,23 @@ resource "coder_agent" "main" {
 
     # Start code-server in the background.
     /tmp/code-server/bin/code-server --auth none --port 13337 >/tmp/code-server.log 2>&1 &
+
+    # Install Kubernetes Tools (kubectl, helm) if requested
+    if [ "${data.coder_parameter.install_k8s_tools.value}" = "true" ]; then
+      echo "Installing Kubernetes Tools..."
+
+      # Install kubectl
+      if ! command -v kubectl &> /dev/null; then
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        sudo mv kubectl /usr/local/bin/
+      fi
+
+      # Install helm
+      if ! command -v helm &> /dev/null; then
+        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      fi
+    fi
   EOT
 
   # The following metadata blocks are optional. They are used to display
@@ -224,6 +241,16 @@ data "coder_parameter" "gemini_base_url" {
   mutable      = true
   type         = "string"
   icon         = "/icon/gemini.svg"
+}
+
+data "coder_parameter" "install_k8s_tools" {
+  name         = "install_k8s_tools"
+  display_name = "Install Kubernetes Tools"
+  description  = "Install kubectl and helm in the workspace"
+  default      = "false"
+  type         = "bool"
+  mutable      = true
+  icon         = "/icon/k8s.png"
 }
 
 module "gemini" {

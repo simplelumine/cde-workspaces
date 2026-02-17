@@ -64,6 +64,7 @@ variable "gemini_api_key" {
   type        = string
   description = "Gemini API Key"
   default     = ""
+  sensitive   = true
 }
 
 variable "gemini_base_url" {

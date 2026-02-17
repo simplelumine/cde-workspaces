@@ -108,7 +108,7 @@ resource "coder_agent" "main" {
   arch           = "amd64"
   startup_script = <<-EOT
     set -e
-    # Ensure .bashre exs
+    # Ensure .bashrc exists
     touch ~/.bashrc
 
     # Install the latest code-server.
@@ -118,7 +118,7 @@ resource "coder_agent" "main" {
     # Start code-server in the background.
     /tmp/code-server/bin/code-server --auth none --port 13337 >/tmp/code-server.log 2>&1 &
 
-    # Install Kubernetes Tools (kubectl, helm) if requested
+    # Install Kubernetes Tools if requested
     if [ "${data.coder_parameter.install_k8s_tools.value}" = "true" ]; then
       echo "Installing Kubernetes Tools..."
 
@@ -133,26 +133,51 @@ resource "coder_agent" "main" {
       if ! command -v helm &> /dev/null; then
         curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
       fi
+
+      # Install flux CLI
+      if ! command -v flux &> /dev/null; then
+        curl -s https://fluxcd.io/install.sh | bash
+      fi
+
+      # Install k9s
+      if ! command -v k9s &> /dev/null; then
+        K9S_VERSION=$(curl -s https://api.github.com/repos/derailed/k9s/releases/latest | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')
+        curl -fsSL "https://github.com/derailed/k9s/releases/download/v$${K9S_VERSION}/k9s_Linux_amd64.tar.gz" | tar xz -C /tmp
+        sudo mv /tmp/k9s /usr/local/bin/
+      fi
+
+      # Install SOPS
+      if ! command -v sops &> /dev/null; then
+        SOPS_VERSION=$(curl -s https://api.github.com/repos/getsops/sops/releases/latest | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')
+        curl -fsSL -o /tmp/sops "https://github.com/getsops/sops/releases/download/v$${SOPS_VERSION}/sops-v$${SOPS_VERSION}.linux.amd64"
+        chmod +x /tmp/sops
+        sudo mv /tmp/sops /usr/local/bin/
+      fi
+
+      # Install age
+      if ! command -v age &> /dev/null; then
+        AGE_VERSION=$(curl -s https://api.github.com/repos/FiloSottile/age/releases/latest | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')
+        curl -fsSL "https://github.com/FiloSottile/age/releases/download/v$${AGE_VERSION}/age-v$${AGE_VERSION}-linux-amd64.tar.gz" | tar xz -C /tmp
+        sudo mv /tmp/age/age /usr/local/bin/
+        sudo mv /tmp/age/age-keygen /usr/local/bin/
+      fi
     fi
 
-    # Inject Kubeconfig
+    # Inject Kubeconfig (Base64 encoded)
     if [ -n "${data.coder_parameter.kubeconfig.value}" ]; then
       echo "Injecting Kubeconfig..."
       mkdir -p ~/.kube
-      # Simple base64 detection
-      if echo "${data.coder_parameter.kubeconfig.value}" | grep -q "^[A-Za-z0-9+/=]*$"; then
-        echo "${data.coder_parameter.kubeconfig.value}" | base64 -d > ~/.kube/config
-      else
-        echo "${data.coder_parameter.kubeconfig.value}" > ~/.kube/config
-      fi
+      echo "${data.coder_parameter.kubeconfig.value}" | base64 -d > ~/.kube/config
       chmod 600 ~/.kube/config
     fi
 
     # Inject SOPS Age Key
+    # Supports multiline format with comment lines (# created: ... / # public key: ...)
+    # Handles both newline-preserved and newline-stripped input from Coder UI
     if [ -n "${data.coder_parameter.sops_age_key.value}" ]; then
       echo "Injecting SOPS Age Key..."
       mkdir -p ~/.config/sops/age
-      echo "${data.coder_parameter.sops_age_key.value}" > ~/.config/sops/age/keys.txt
+      echo "${data.coder_parameter.sops_age_key.value}" | sed 's/\(# \)/\n\1/g; s/\(AGE-SECRET-KEY-\)/\n\1/g' | grep -v '^$$' > ~/.config/sops/age/keys.txt
       chmod 600 ~/.config/sops/age/keys.txt
     fi
   EOT
@@ -233,8 +258,8 @@ data "coder_parameter" "install_k8s_tools" {
 
 data "coder_parameter" "kubeconfig" {
   name         = "kubeconfig"
-  display_name = "Kubeconfig"
-  description  = "Paste your kubeconfig content (supports Base64 encoding)"
+  display_name = "Kubeconfig (Base64)"
+  description  = "Paste your Base64-encoded kubeconfig (run: cat ~/.kube/config | base64 -w0)"
   default      = ""
   type         = "string"
   mutable      = true
@@ -245,7 +270,7 @@ data "coder_parameter" "kubeconfig" {
 data "coder_parameter" "sops_age_key" {
   name         = "sops_age_key"
   display_name = "SOPS Age Key"
-  description  = "Paste your SOPS Age private key content"
+  description  = "Paste your SOPS Age private key (supports comment lines, e.g. # created: ... + AGE-SECRET-KEY-...)"
   default      = ""
   type         = "string"
   mutable      = true

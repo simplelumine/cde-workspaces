@@ -118,57 +118,64 @@ resource "coder_agent" "main" {
     # Start code-server in the background.
     /tmp/code-server/bin/code-server --auth none --port 13337 >/tmp/code-server.log 2>&1 &
 
-    # Install Kubernetes Tools (kubectl, helm, flux, k9s, sops, age)
+    # Install Kubernetes Tools (kubectl, helm, k9s)
     if [ "${data.coder_parameter.install_k8s_tools.value}" = "true" ]; then
       echo "Installing Kubernetes Tools..."
 
       # Install kubectl
-      if ! command -v kubectl &> /dev/null; then
+      if ! command -v kubectl >/dev/null 2>&1; then
         curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
         chmod +x kubectl
         sudo mv kubectl /usr/local/bin/
       fi
 
       # Install helm
-      if ! command -v helm &> /dev/null; then
+      if ! command -v helm >/dev/null 2>&1; then
         curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
       fi
 
-      # Install flux CLI
-      if ! command -v flux &> /dev/null; then
-        curl -s https://fluxcd.io/install.sh | bash
-      fi
-
       # Install k9s
-      if ! command -v k9s &> /dev/null; then
+      if ! command -v k9s >/dev/null 2>&1; then
         K9S_VERSION=$(curl -s https://api.github.com/repos/derailed/k9s/releases/latest | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')
-        curl -fsSL "https://github.com/derailed/k9s/releases/download/v$${K9S_VERSION}/k9s_Linux_amd64.tar.gz" | tar xz -C /tmp
+        curl -fsSL "https://github.com/derailed/k9s/releases/download/v${K9S_VERSION}/k9s_Linux_amd64.tar.gz" | tar xz -C /tmp
         sudo mv /tmp/k9s /usr/local/bin/
+      fi
+    fi
+
+    # Install Flux Tools (flux, sops, age)
+    if [ "${data.coder_parameter.install_flux_tools.value}" = "true" ]; then
+      echo "Installing Flux Tools..."
+
+      # Install flux CLI
+      if ! command -v flux >/dev/null 2>&1; then
+        curl -s https://fluxcd.io/install.sh | sudo bash
       fi
 
       # Install SOPS
-      if ! command -v sops &> /dev/null; then
+      if ! command -v sops >/dev/null 2>&1; then
         SOPS_VERSION=$(curl -s https://api.github.com/repos/getsops/sops/releases/latest | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')
-        curl -fsSL -o /tmp/sops "https://github.com/getsops/sops/releases/download/v$${SOPS_VERSION}/sops-v$${SOPS_VERSION}.linux.amd64"
+        curl -fsSL -o /tmp/sops "https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.amd64"
         chmod +x /tmp/sops
         sudo mv /tmp/sops /usr/local/bin/
       fi
 
       # Install age
-      if ! command -v age &> /dev/null; then
+      if ! command -v age >/dev/null 2>&1; then
         AGE_VERSION=$(curl -s https://api.github.com/repos/FiloSottile/age/releases/latest | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')
-        curl -fsSL "https://github.com/FiloSottile/age/releases/download/v$${AGE_VERSION}/age-v$${AGE_VERSION}-linux-amd64.tar.gz" | tar xz -C /tmp
+        curl -fsSL "https://github.com/FiloSottile/age/releases/download/v${AGE_VERSION}/age-v${AGE_VERSION}-linux-amd64.tar.gz" | tar xz -C /tmp
         sudo mv /tmp/age/age /usr/local/bin/
         sudo mv /tmp/age/age-keygen /usr/local/bin/
       fi
+    fi
 
-      # Install Ansible (Default: true)
-      if ! command -v ansible &> /dev/null; then
+    # Install Ansible (Default: false)
+    if [ "${data.coder_parameter.install_ansible_tools.value}" = "true" ]; then
+      if ! command -v ansible >/dev/null 2>&1; then
         echo "Installing Ansible..."
         sudo apt-get update
         sudo apt-get install -y software-properties-common
         sudo add-apt-repository --yes --update ppa:ansible/ansible
-        sudo apt-get install -y ansible
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y ansible
       fi
     fi
 
@@ -276,11 +283,31 @@ module "antigravity" {
 data "coder_parameter" "install_k8s_tools" {
   name         = "install_k8s_tools"
   display_name = "Install Kubernetes Tools"
-  description  = "Install kubectl and helm in the workspace"
+  description  = "Install kubectl, helm, and k9s in the workspace"
   default      = "true"
   type         = "bool"
   mutable      = true
   icon         = "/icon/k8s.png"
+}
+
+data "coder_parameter" "install_flux_tools" {
+  name         = "install_flux_tools"
+  display_name = "Install Flux Tools"
+  description  = "Install flux, sops, and age in the workspace"
+  default      = "false"
+  type         = "bool"
+  mutable      = true
+  icon         = "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/flux.svg"
+}
+
+data "coder_parameter" "install_ansible_tools" {
+  name         = "install_ansible_tools"
+  display_name = "Install Ansible Tools"
+  description  = "Install ansible in the workspace"
+  default      = "false"
+  type         = "bool"
+  mutable      = true
+  icon         = "/icon/ansible.svg"
 }
 
 data "coder_parameter" "kubeconfig" {

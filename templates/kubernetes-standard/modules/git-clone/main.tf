@@ -20,11 +20,12 @@ variable "base_dir" {
 data "coder_parameter" "git_repos" {
   name         = "git_repos"
   display_name = "Git Repositories"
-  description  = "Comma-separated list of git repositories to clone."
+  description  = "List of git repositories to clone (one per line)."
   default      = ""
   mutable      = true
   type         = "string"
   icon         = "/icon/git.svg"
+  form_type    = "textarea"
 }
 
 resource "coder_script" "git_clone" {
@@ -49,10 +50,10 @@ resource "coder_script" "git_clone" {
     mkdir -p "$BASE_DIR"
     cd "$BASE_DIR"
 
-    # Split by comma
-    IFS=',' read -ra REPO_LIST <<< "$REPOS"
+    # Replace commas with newlines to support both formats
+    REPOS=$(echo "$REPOS" | tr ',' '\n')
 
-    for REPO in "$${REPO_LIST[@]}"; do
+    while IFS= read -r REPO; do
       # Trim whitespace
       REPO=$(echo "$REPO" | xargs)
 
@@ -76,6 +77,6 @@ resource "coder_script" "git_clone" {
           rm -rf "$REPO_NAME"
         fi
       fi
-    done
+    done <<< "$REPOS"
   EOT
 }

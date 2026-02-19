@@ -118,7 +118,7 @@ resource "coder_agent" "main" {
     # Start code-server in the background.
     /tmp/code-server/bin/code-server --auth none --port 13337 >/tmp/code-server.log 2>&1 &
 
-    # Install Kubernetes Tools (kubectl, helm) if requested
+    # Install Kubernetes Tools (kubectl, helm, flux, k9s, sops, age)
     if [ "${data.coder_parameter.install_k8s_tools.value}" = "true" ]; then
       echo "Installing Kubernetes Tools..."
 
@@ -133,39 +133,79 @@ resource "coder_agent" "main" {
       if ! command -v helm &> /dev/null; then
         curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
       fi
-    fi
 
-    # Install Terraform Tools (Terraform, OpenTofu) if requested
-    if [ "${data.coder_parameter.install_terraform_tools.value}" = "true" ]; then
-      echo "Installing Terraform Tools..."
-
-      # Install Terraform
-      if ! command -v terraform &> /dev/null; then
-        echo "Installing Terraform..."
-        curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-        sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-        sudo apt-get update && sudo apt-get install terraform
+      # Install flux CLI
+      if ! command -v flux &> /dev/null; then
+        curl -s https://fluxcd.io/install.sh | bash
       fi
 
-      # Install OpenTofu
-      if ! command -v tofu &> /dev/null; then
-        echo "Installing OpenTofu..."
-        curl --proto '=https' --tlsv1.2 -fsSL https://get.opentofu.org/install-opentofu.sh -o install-opentofu.sh
-        chmod +x install-opentofu.sh
-        ./install-opentofu.sh --install-method deb
-        rm install-opentofu.sh
+      # Install k9s
+      if ! command -v k9s &> /dev/null; then
+        K9S_VERSION=$(curl -s https://api.github.com/repos/derailed/k9s/releases/latest | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')
+        curl -fsSL "https://github.com/derailed/k9s/releases/download/v$${K9S_VERSION}/k9s_Linux_amd64.tar.gz" | tar xz -C /tmp
+        sudo mv /tmp/k9s /usr/local/bin/
       fi
-    fi
 
-    # Install Ansible Tools if requested
-    if [ "${data.coder_parameter.install_ansible_tools.value}" = "true" ]; then
-      echo "Installing Ansible Tools..."
+      # Install SOPS
+      if ! command -v sops &> /dev/null; then
+        SOPS_VERSION=$(curl -s https://api.github.com/repos/getsops/sops/releases/latest | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')
+        curl -fsSL -o /tmp/sops "https://github.com/getsops/sops/releases/download/v$${SOPS_VERSION}/sops-v$${SOPS_VERSION}.linux.amd64"
+        chmod +x /tmp/sops
+        sudo mv /tmp/sops /usr/local/bin/
+      fi
+
+      # Install age
+      if ! command -v age &> /dev/null; then
+        AGE_VERSION=$(curl -s https://api.github.com/repos/FiloSottile/age/releases/latest | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')
+        curl -fsSL "https://github.com/FiloSottile/age/releases/download/v$${AGE_VERSION}/age-v$${AGE_VERSION}-linux-amd64.tar.gz" | tar xz -C /tmp
+        sudo mv /tmp/age/age /usr/local/bin/
+        sudo mv /tmp/age/age-keygen /usr/local/bin/
+      fi
+
+      # Install Ansible (Default: true)
       if ! command -v ansible &> /dev/null; then
+        echo "Installing Ansible..."
         sudo apt-get update
         sudo apt-get install -y software-properties-common
         sudo add-apt-repository --yes --update ppa:ansible/ansible
         sudo apt-get install -y ansible
       fi
+    fi
+
+    # Inject Kubeconfig
+    if [ -n "${data.coder_parameter.kubeconfig.value}" ]; then
+      echo "Injecting Kubeconfig..."
+      mkdir -p ~/.kube
+      cat > ~/.kube/config <<'KUBECONFIG_EOF'
+${data.coder_parameter.kubeconfig.value}
+KUBECONFIG_EOF
+      chmod 600 ~/.kube/config
+    fi
+
+    # Inject SOPS Age Key
+    if [ -n "${data.coder_parameter.sops_age_key.value}" ]; then
+      echo "Injecting SOPS Age Key..."
+      mkdir -p ~/.config/sops/age
+      cat > ~/.config/sops/age/keys.txt <<'SOPS_EOF'
+${data.coder_parameter.sops_age_key.value}
+SOPS_EOF
+      chmod 600 ~/.config/sops/age/keys.txt
+    fi
+
+    # Inject Ansible Config
+    if [ -n "${data.coder_parameter.ansible_config.value}" ]; then
+      echo "Injecting Ansible Config..."
+      cat > ~/.ansible.cfg <<'ANSIBLE_CFG_EOF'
+${data.coder_parameter.ansible_config.value}
+ANSIBLE_CFG_EOF
+    fi
+
+    # Inject Ansible Inventory
+    if [ -n "${data.coder_parameter.ansible_inventory.value}" ]; then
+      echo "Injecting Ansible Inventory..."
+      cat > ~/inventory.ini <<'ANSIBLE_INV_EOF'
+${data.coder_parameter.ansible_inventory.value}
+ANSIBLE_INV_EOF
     fi
   EOT
 
@@ -237,28 +277,52 @@ data "coder_parameter" "install_k8s_tools" {
   name         = "install_k8s_tools"
   display_name = "Install Kubernetes Tools"
   description  = "Install kubectl and helm in the workspace"
-  default      = "false"
+  default      = "true"
   type         = "bool"
   mutable      = true
   icon         = "/icon/k8s.png"
 }
 
-data "coder_parameter" "install_terraform_tools" {
-  name         = "install_terraform_tools"
-  display_name = "Install Terraform Tools"
-  description  = "Install terraform and opentofu in the workspace"
-  default      = "false"
-  type         = "bool"
+data "coder_parameter" "kubeconfig" {
+  name         = "kubeconfig"
+  display_name = "Kubeconfig"
+  description  = "Paste your kubeconfig YAML content"
+  default      = ""
+  type         = "string"
+  form_type    = "textarea"
   mutable      = true
-  icon         = "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/terraform.svg"
+  icon         = "/icon/k8s.png"
 }
 
-data "coder_parameter" "install_ansible_tools" {
-  name         = "install_ansible_tools"
-  display_name = "Install Ansible Tools"
-  description  = "Install ansible in the workspace"
-  default      = "false"
-  type         = "bool"
+data "coder_parameter" "sops_age_key" {
+  name         = "sops_age_key"
+  display_name = "SOPS Age Key"
+  description  = "(Optional) Paste your SOPS Age private key content"
+  default      = ""
+  type         = "string"
+  form_type    = "textarea"
+  mutable      = true
+  icon         = "/icon/k8s.png"
+}
+
+data "coder_parameter" "ansible_config" {
+  name         = "ansible_config"
+  display_name = "Ansible Config"
+  description  = "(Optional) Paste your ~/.ansible.cfg content"
+  default      = ""
+  type         = "string"
+  form_type    = "textarea"
+  mutable      = true
+  icon         = "/icon/ansible.svg"
+}
+
+data "coder_parameter" "ansible_inventory" {
+  name         = "ansible_inventory"
+  display_name = "Ansible Inventory"
+  description  = "(Optional) Paste your ~/inventory.ini content"
+  default      = ""
+  type         = "string"
+  form_type    = "textarea"
   mutable      = true
   icon         = "/icon/ansible.svg"
 }

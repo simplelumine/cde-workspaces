@@ -153,7 +153,7 @@ resource "coder_agent" "main" {
     if [ "${data.coder_parameter.install_ansible_tools.value}" = "true" ]; then
       if ! command -v ansible >/dev/null 2>&1; then
         echo "Installing Ansible Core..."
-        sudo -u coder pip3 install --user ansible-core
+        sudo -u coder pip3 install --user ansible-core --break-system-packages
         sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y sshpass
       fi
     fi

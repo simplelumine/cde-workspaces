@@ -142,7 +142,8 @@ resource "coder_agent" "main" {
       # Install Terraform
       if ! command -v terraform >/dev/null 2>&1; then
         echo "Installing Terraform..."
-        curl -fsSL -o /tmp/terraform.zip "https://releases.hashicorp.com/terraform/1.10.5/terraform_1.10.5_linux_amd64.zip"
+        TERRAFORM_VERSION=$(curl -Ls -o /dev/null -w %%{url_effective} https://github.com/hashicorp/terraform/releases/latest | rev | cut -d/ -f1 | rev | sed 's/^v//')
+        curl -fsSL -o /tmp/terraform.zip "https://releases.hashicorp.com/terraform/$${TERRAFORM_VERSION}/terraform_$${TERRAFORM_VERSION}_linux_amd64.zip"
         sudo unzip -q /tmp/terraform.zip -d /usr/local/bin/
         rm /tmp/terraform.zip
       fi

@@ -140,32 +140,21 @@ resource "coder_agent" "main" {
       echo "Installing Terraform Tools..."
 
       # Install Terraform
-      if ! command -v terraform &> /dev/null; then
+      if ! command -v terraform >/dev/null 2>&1; then
         echo "Installing Terraform..."
-        curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-        echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-        sudo apt-get update
-        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y terraform
+        curl -fsSL -o /tmp/terraform.zip "https://releases.hashicorp.com/terraform/1.10.5/terraform_1.10.5_linux_amd64.zip"
+        unzip -q /tmp/terraform.zip -d /usr/local/bin/
+        rm /tmp/terraform.zip
       fi
 
-      # Install OpenTofu
-      if ! command -v tofu &> /dev/null; then
-        echo "Installing OpenTofu..."
-        curl --proto '=https' --tlsv1.2 -fsSL https://get.opentofu.org/install-opentofu.sh -o install-opentofu.sh
-        chmod +x install-opentofu.sh
-        ./install-opentofu.sh --install-method deb
-        rm install-opentofu.sh
-      fi
     fi
 
-    # Install Ansible Tools if requested
+    # Install Ansible Core
     if [ "${data.coder_parameter.install_ansible_tools.value}" = "true" ]; then
-      echo "Installing Ansible Tools..."
-      if ! command -v ansible &> /dev/null; then
-        sudo apt-get update
-        sudo apt-get install -y software-properties-common
-        sudo add-apt-repository --yes --update ppa:ansible/ansible
-        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y ansible
+      if ! command -v ansible >/dev/null 2>&1; then
+        echo "Installing Ansible Core..."
+        sudo -u coder pip3 install --user ansible-core
+        sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y sshpass
       fi
     fi
   EOT
@@ -247,7 +236,7 @@ data "coder_parameter" "install_k8s_tools" {
 data "coder_parameter" "install_terraform_tools" {
   name         = "install_terraform_tools"
   display_name = "Install Terraform Tools"
-  description  = "Install terraform and opentofu in the workspace"
+  description  = "Install terraform in the workspace"
   default      = "false"
   type         = "bool"
   mutable      = true

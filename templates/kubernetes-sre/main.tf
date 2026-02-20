@@ -136,47 +136,65 @@ resource "coder_agent" "main" {
 
       # Install k9s
       if ! command -v k9s >/dev/null 2>&1; then
-        K9S_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://github.com/derailed/k9s/releases/latest | rev | cut -d/ -f1 | rev | sed 's/^v//')
-        curl -fsSL "https://github.com/derailed/k9s/releases/download/v${K9S_VERSION}/k9s_Linux_amd64.tar.gz" | tar xz -C /tmp
+        K9S_VERSION=$(curl -Ls -o /dev/null -w %%{url_effective} https://github.com/derailed/k9s/releases/latest | rev | cut -d/ -f1 | rev | sed 's/^v//')
+        curl -fsSL "https://github.com/derailed/k9s/releases/download/v$${K9S_VERSION}/k9s_Linux_amd64.tar.gz" | tar xz -C /tmp
         sudo mv /tmp/k9s /usr/local/bin/
       fi
     fi
 
-    # Install Flux Tools (flux, sops, age)
-    if [ "${data.coder_parameter.install_flux_tools.value}" = "true" ]; then
-      echo "Installing Flux Tools..."
+    # Install Terraform
+    if [ "${data.coder_parameter.install_terraform_tools.value}" = "true" ]; then
+      if ! command -v terraform >/dev/null 2>&1; then
+        echo "Installing Terraform..."
+        curl -fsSL -o /tmp/terraform.zip "https://releases.hashicorp.com/terraform/1.10.5/terraform_1.10.5_linux_amd64.zip"
+        unzip -q /tmp/terraform.zip -d /usr/local/bin/
+        rm /tmp/terraform.zip
+      fi
+    fi
 
-      # Install flux CLI
+    # Install Flux CLI
+    if [ "${data.coder_parameter.install_flux_tools.value}" = "true" ]; then
+      echo "Installing Flux CLI..."
       if ! command -v flux >/dev/null 2>&1; then
         curl -s https://fluxcd.io/install.sh | sudo bash
       fi
+    fi
 
-      # Install SOPS
+    # Install SOPS and Age
+    if [ "${data.coder_parameter.install_sops_age_tools.value}" = "true" ]; then
+      echo "Installing SOPS and Age..."
       if ! command -v sops >/dev/null 2>&1; then
-        SOPS_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://github.com/getsops/sops/releases/latest | rev | cut -d/ -f1 | rev | sed 's/^v//')
-        curl -fsSL -o /tmp/sops "https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.amd64"
+        SOPS_VERSION=$(curl -Ls -o /dev/null -w %%{url_effective} https://github.com/getsops/sops/releases/latest | rev | cut -d/ -f1 | rev | sed 's/^v//')
+        curl -fsSL -o /tmp/sops "https://github.com/getsops/sops/releases/download/v$${SOPS_VERSION}/sops-v$${SOPS_VERSION}.linux.amd64"
         chmod +x /tmp/sops
         sudo mv /tmp/sops /usr/local/bin/
       fi
 
-      # Install age
       if ! command -v age >/dev/null 2>&1; then
-        AGE_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://github.com/FiloSottile/age/releases/latest | rev | cut -d/ -f1 | rev | sed 's/^v//')
-        curl -fsSL "https://github.com/FiloSottile/age/releases/download/v${AGE_VERSION}/age-v${AGE_VERSION}-linux-amd64.tar.gz" | tar xz -C /tmp
+        AGE_VERSION=$(curl -Ls -o /dev/null -w %%{url_effective} https://github.com/FiloSottile/age/releases/latest | rev | cut -d/ -f1 | rev | sed 's/^v//')
+        curl -fsSL "https://github.com/FiloSottile/age/releases/download/v$${AGE_VERSION}/age-v$${AGE_VERSION}-linux-amd64.tar.gz" | tar xz -C /tmp
         sudo mv /tmp/age/age /usr/local/bin/
         sudo mv /tmp/age/age-keygen /usr/local/bin/
       fi
     fi
 
-    # Install Ansible (Default: false)
+    # Install Ansible Core
     if [ "${data.coder_parameter.install_ansible_tools.value}" = "true" ]; then
       if ! command -v ansible >/dev/null 2>&1; then
-        echo "Installing Ansible..."
-        sudo apt-get update
-        sudo apt-get install -y software-properties-common
-        sudo add-apt-repository --yes --update ppa:ansible/ansible
-        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y ansible
+        echo "Installing Ansible Core..."
+        sudo -u coder pip3 install --user ansible-core
+        sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y sshpass
       fi
+    fi
+
+    # Inject SSH Private Key
+    if [ -n "${data.coder_parameter.ssh_private_key.value}" ]; then
+      echo "Injecting SSH Private Key..."
+      mkdir -p ~/.ssh
+      cat > ~/.ssh/id_ed25519 <<'SSH_EOF'
+${data.coder_parameter.ssh_private_key.value}
+SSH_EOF
+      chmod 600 ~/.ssh/id_ed25519
     fi
 
     # Inject Kubeconfig
@@ -290,14 +308,34 @@ data "coder_parameter" "install_k8s_tools" {
   icon         = "/icon/k8s.png"
 }
 
+data "coder_parameter" "install_terraform_tools" {
+  name         = "install_terraform_tools"
+  display_name = "Install Terraform Tools"
+  description  = "Install lightweight terraform binary in the workspace for validation"
+  default      = "false"
+  type         = "bool"
+  mutable      = true
+  icon         = "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/terraform.svg"
+}
+
 data "coder_parameter" "install_flux_tools" {
   name         = "install_flux_tools"
-  display_name = "Install Flux Tools"
-  description  = "Install flux, sops, and age in the workspace"
+  display_name = "Install Flux CLI"
+  description  = "Install flux in the workspace"
   default      = "false"
   type         = "bool"
   mutable      = true
   icon         = "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/flux.svg"
+}
+
+data "coder_parameter" "install_sops_age_tools" {
+  name         = "install_sops_age_tools"
+  display_name = "Install SOPS & Age"
+  description  = "Install SOPS and age tools for gitops secret management"
+  default      = "false"
+  type         = "bool"
+  mutable      = true
+  icon         = "/icon/k8s.png"
 }
 
 data "coder_parameter" "install_ansible_tools" {
@@ -308,6 +346,17 @@ data "coder_parameter" "install_ansible_tools" {
   type         = "bool"
   mutable      = true
   icon         = "/icon/ansible.svg"
+}
+
+data "coder_parameter" "ssh_private_key" {
+  name         = "ssh_private_key"
+  display_name = "SSH Private Key"
+  description  = "(Optional) Paste your id_ed25519 private key content for git/ansible via SSH"
+  default      = ""
+  type         = "string"
+  form_type    = "textarea"
+  mutable      = true
+  icon         = ""
 }
 
 data "coder_parameter" "kubeconfig" {

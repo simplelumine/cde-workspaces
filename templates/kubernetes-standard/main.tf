@@ -143,10 +143,9 @@ resource "coder_agent" "main" {
       if ! command -v terraform >/dev/null 2>&1; then
         echo "Installing Terraform..."
         curl -fsSL -o /tmp/terraform.zip "https://releases.hashicorp.com/terraform/1.10.5/terraform_1.10.5_linux_amd64.zip"
-        unzip -q /tmp/terraform.zip -d /usr/local/bin/
+        sudo unzip -q /tmp/terraform.zip -d /usr/local/bin/
         rm /tmp/terraform.zip
       fi
-
     fi
 
     # Install Ansible Core

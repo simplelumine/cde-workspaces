@@ -136,7 +136,7 @@ resource "coder_agent" "main" {
 
       # Install k9s
       if ! command -v k9s >/dev/null 2>&1; then
-        K9S_VERSION=$(curl -Ls -o /dev/null -w %%{url_effective} https://github.com/derailed/k9s/releases/latest | rev | cut -d/ -f1 | rev | sed 's/^v//')
+        K9S_VERSION=$(curl -sI https://github.com/derailed/k9s/releases/latest | awk -F/ '/^location:/ || /^Location:/ {print $NF}' | tr -d '\r' | sed 's/^v//')
         curl -fsSL "https://github.com/derailed/k9s/releases/download/v$${K9S_VERSION}/k9s_Linux_amd64.tar.gz" | tar xz -C /tmp
         sudo mv /tmp/k9s /usr/local/bin/
       fi
@@ -146,7 +146,7 @@ resource "coder_agent" "main" {
     if [ "${data.coder_parameter.install_terraform_tools.value}" = "true" ]; then
       if ! command -v terraform >/dev/null 2>&1; then
         echo "Installing Terraform..."
-        TERRAFORM_VERSION=$(curl -Ls -o /dev/null -w %%{url_effective} https://github.com/hashicorp/terraform/releases/latest | rev | cut -d/ -f1 | rev | sed 's/^v//')
+        TERRAFORM_VERSION=$(curl -sI https://github.com/hashicorp/terraform/releases/latest | awk -F/ '/^location:/ || /^Location:/ {print $NF}' | tr -d '\r' | sed 's/^v//')
         curl -fsSL -o /tmp/terraform.zip "https://releases.hashicorp.com/terraform/$${TERRAFORM_VERSION}/terraform_$${TERRAFORM_VERSION}_linux_amd64.zip"
         sudo unzip -q /tmp/terraform.zip -d /usr/local/bin/
         rm /tmp/terraform.zip
@@ -165,14 +165,14 @@ resource "coder_agent" "main" {
     if [ "${data.coder_parameter.install_sops_age_tools.value}" = "true" ]; then
       echo "Installing SOPS and Age..."
       if ! command -v sops >/dev/null 2>&1; then
-        SOPS_VERSION=$(curl -Ls -o /dev/null -w %%{url_effective} https://github.com/getsops/sops/releases/latest | rev | cut -d/ -f1 | rev | sed 's/^v//')
+        SOPS_VERSION=$(curl -sI https://github.com/getsops/sops/releases/latest | awk -F/ '/^location:/ || /^Location:/ {print $NF}' | tr -d '\r' | sed 's/^v//')
         curl -fsSL -o /tmp/sops "https://github.com/getsops/sops/releases/download/v$${SOPS_VERSION}/sops-v$${SOPS_VERSION}.linux.amd64"
         chmod +x /tmp/sops
         sudo mv /tmp/sops /usr/local/bin/
       fi
 
       if ! command -v age >/dev/null 2>&1; then
-        AGE_VERSION=$(curl -Ls -o /dev/null -w %%{url_effective} https://github.com/FiloSottile/age/releases/latest | rev | cut -d/ -f1 | rev | sed 's/^v//')
+        AGE_VERSION=$(curl -sI https://github.com/FiloSottile/age/releases/latest | awk -F/ '/^location:/ || /^Location:/ {print $NF}' | tr -d '\r' | sed 's/^v//')
         curl -fsSL "https://github.com/FiloSottile/age/releases/download/v$${AGE_VERSION}/age-v$${AGE_VERSION}-linux-amd64.tar.gz" | tar xz -C /tmp
         sudo mv /tmp/age/age /usr/local/bin/
         sudo mv /tmp/age/age-keygen /usr/local/bin/

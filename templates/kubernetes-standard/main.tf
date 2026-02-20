@@ -142,9 +142,10 @@ resource "coder_agent" "main" {
       # Install Terraform
       if ! command -v terraform &> /dev/null; then
         echo "Installing Terraform..."
-        curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-        sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-        sudo apt-get update && sudo apt-get install terraform
+        curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+        echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+        sudo apt-get update
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y terraform
       fi
 
       # Install OpenTofu
@@ -164,7 +165,7 @@ resource "coder_agent" "main" {
         sudo apt-get update
         sudo apt-get install -y software-properties-common
         sudo add-apt-repository --yes --update ppa:ansible/ansible
-        sudo apt-get install -y ansible
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y ansible
       fi
     fi
   EOT
@@ -415,8 +416,8 @@ resource "kubernetes_deployment_v1" "main" {
           }
           resources {
             requests = {
-              "cpu"    = "250m"
-              "memory" = "512Mi"
+              "cpu"    = "100m"
+              "memory" = "256Mi"
             }
             limits = {
               "cpu"    = "${data.coder_parameter.cpu.value}"

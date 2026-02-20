@@ -136,7 +136,7 @@ resource "coder_agent" "main" {
 
       # Install k9s
       if ! command -v k9s >/dev/null 2>&1; then
-        K9S_VERSION=$(curl -s https://api.github.com/repos/derailed/k9s/releases/latest | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')
+        K9S_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://github.com/derailed/k9s/releases/latest | rev | cut -d/ -f1 | rev | sed 's/^v//')
         curl -fsSL "https://github.com/derailed/k9s/releases/download/v${K9S_VERSION}/k9s_Linux_amd64.tar.gz" | tar xz -C /tmp
         sudo mv /tmp/k9s /usr/local/bin/
       fi
@@ -153,7 +153,7 @@ resource "coder_agent" "main" {
 
       # Install SOPS
       if ! command -v sops >/dev/null 2>&1; then
-        SOPS_VERSION=$(curl -s https://api.github.com/repos/getsops/sops/releases/latest | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')
+        SOPS_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://github.com/getsops/sops/releases/latest | rev | cut -d/ -f1 | rev | sed 's/^v//')
         curl -fsSL -o /tmp/sops "https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.amd64"
         chmod +x /tmp/sops
         sudo mv /tmp/sops /usr/local/bin/
@@ -161,7 +161,7 @@ resource "coder_agent" "main" {
 
       # Install age
       if ! command -v age >/dev/null 2>&1; then
-        AGE_VERSION=$(curl -s https://api.github.com/repos/FiloSottile/age/releases/latest | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')
+        AGE_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://github.com/FiloSottile/age/releases/latest | rev | cut -d/ -f1 | rev | sed 's/^v//')
         curl -fsSL "https://github.com/FiloSottile/age/releases/download/v${AGE_VERSION}/age-v${AGE_VERSION}-linux-amd64.tar.gz" | tar xz -C /tmp
         sudo mv /tmp/age/age /usr/local/bin/
         sudo mv /tmp/age/age-keygen /usr/local/bin/
@@ -506,8 +506,8 @@ resource "kubernetes_deployment_v1" "main" {
           }
           resources {
             requests = {
-              "cpu"    = "250m"
-              "memory" = "512Mi"
+              "cpu"    = "100m"
+              "memory" = "256Mi"
             }
             limits = {
               "cpu"    = "${data.coder_parameter.cpu.value}"

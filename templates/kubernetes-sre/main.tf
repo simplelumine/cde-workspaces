@@ -425,7 +425,7 @@ data "coder_parameter" "install_github_cli" {
   name         = "install_github_cli"
   display_name = "Install GitHub CLI"
   description  = "Install the official GitHub CLI (gh) and auto-authenticate it with Coder's GitHub OAuth token"
-  default      = "false"
+  default      = "true"
   type         = "bool"
   mutable      = true
   icon         = "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/github.svg"

@@ -27,15 +27,10 @@ data "coder_parameter" "install_sops_age_tools" {
   icon         = "/icon/k8s.png"
 }
 
-data "coder_parameter" "sops_age_key" {
-  name         = "sops_age_key"
-  display_name = "SOPS Age Key"
-  description  = "(Optional) Paste your SOPS Age private key content"
-  default      = ""
-  type         = "string"
-  form_type    = "textarea"
-  mutable      = true
-  icon         = "/icon/k8s.png"
+variable "sops_age_key" {
+  type        = string
+  description = "The SOPS Age private key content to inject"
+  default     = ""
 }
 
 resource "coder_script" "sops_tools" {
@@ -64,11 +59,11 @@ resource "coder_script" "sops_tools" {
       fi
     fi
 
-    if [ -n "${data.coder_parameter.sops_age_key.value}" ]; then
+    if [ -n "${var.sops_age_key}" ]; then
       echo "Injecting SOPS Age Key..."
       mkdir -p ~/.config/sops/age
       cat > ~/.config/sops/age/keys.txt <<'SOPS_EOF'
-${data.coder_parameter.sops_age_key.value}
+${var.sops_age_key}
 SOPS_EOF
       chmod 600 ~/.config/sops/age/keys.txt
     fi

@@ -27,37 +27,22 @@ data "coder_parameter" "install_ansible_tools" {
   icon         = "/icon/ansible.svg"
 }
 
-data "coder_parameter" "ansible_config" {
-  name         = "ansible_config"
-  display_name = "Ansible Config"
-  description  = "(Optional) Paste your ~/.ansible.cfg content"
-  default      = ""
-  type         = "string"
-  form_type    = "textarea"
-  mutable      = true
-  icon         = "/icon/ansible.svg"
+variable "ansible_config" {
+  type        = string
+  description = "The ~/.ansible.cfg content to inject"
+  default     = ""
 }
 
-data "coder_parameter" "ansible_inventory" {
-  name         = "ansible_inventory"
-  display_name = "Ansible Inventory"
-  description  = "(Optional) Paste your ~/inventory.ini content"
-  default      = ""
-  type         = "string"
-  form_type    = "textarea"
-  mutable      = true
-  icon         = "/icon/ansible.svg"
+variable "ansible_inventory" {
+  type        = string
+  description = "The ~/inventory.ini content to inject"
+  default     = ""
 }
 
-data "coder_parameter" "ssh_private_key" {
-  name         = "ssh_private_key"
-  display_name = "SSH Private Key"
-  description  = "(Optional) Paste your id_ed25519 private key content for git/ansible via SSH"
-  default      = ""
-  type         = "string"
-  form_type    = "textarea"
-  mutable      = true
-  icon         = ""
+variable "ssh_private_key" {
+  type        = string
+  description = "The SSH private key to inject for git/ansible"
+  default     = ""
 }
 
 resource "coder_script" "ansible_tools" {
@@ -77,26 +62,26 @@ resource "coder_script" "ansible_tools" {
       fi
     fi
 
-    if [ -n "${data.coder_parameter.ssh_private_key.value}" ]; then
+    if [ -n "${var.ssh_private_key}" ]; then
       echo "Injecting SSH Private Key..."
       mkdir -p ~/.ssh
       cat > ~/.ssh/id_ed25519 <<'SSH_EOF'
-${data.coder_parameter.ssh_private_key.value}
+${var.ssh_private_key}
 SSH_EOF
       chmod 600 ~/.ssh/id_ed25519
     fi
 
-    if [ -n "${data.coder_parameter.ansible_config.value}" ]; then
+    if [ -n "${var.ansible_config}" ]; then
       echo "Injecting Ansible Config..."
       cat > ~/.ansible.cfg <<'ANSIBLE_CFG_EOF'
-${data.coder_parameter.ansible_config.value}
+${var.ansible_config}
 ANSIBLE_CFG_EOF
     fi
 
-    if [ -n "${data.coder_parameter.ansible_inventory.value}" ]; then
+    if [ -n "${var.ansible_inventory}" ]; then
       echo "Injecting Ansible Inventory..."
       cat > ~/inventory.ini <<'ANSIBLE_INV_EOF'
-${data.coder_parameter.ansible_inventory.value}
+${var.ansible_inventory}
 ANSIBLE_INV_EOF
     fi
   EOT

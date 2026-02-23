@@ -200,9 +200,7 @@ data "coder_parameter" "kubeconfig" {
   type         = "string"
   icon         = "/icon/k8s.png"
   mutable      = true
-  
-  # Use textarea explicitly if supported, or rely on string default behavior
-  # form_type    = "textarea" # Depending on Coder version, this might be valid or deprecated
+  form_type    = "textarea"
 }
 
 module "kubernetes-tools" {
@@ -221,14 +219,62 @@ module "flux-tools" {
   agent_id = coder_agent.main.id
 }
 
+data "coder_parameter" "ansible_config" {
+  name         = "ansible_config"
+  display_name = "Ansible Config"
+  description  = "(Optional) Paste your ~/.ansible.cfg content"
+  default      = ""
+  type         = "string"
+  form_type    = "textarea"
+  mutable      = true
+  icon         = "/icon/ansible.svg"
+}
+
+data "coder_parameter" "ansible_inventory" {
+  name         = "ansible_inventory"
+  display_name = "Ansible Inventory"
+  description  = "(Optional) Paste your ~/inventory.ini content"
+  default      = ""
+  type         = "string"
+  form_type    = "textarea"
+  mutable      = true
+  icon         = "/icon/ansible.svg"
+}
+
+data "coder_parameter" "ssh_private_key" {
+  name         = "ssh_private_key"
+  display_name = "SSH Private Key"
+  description  = "(Optional) Paste your id_ed25519 private key content for git/ansible via SSH"
+  default      = ""
+  type         = "string"
+  form_type    = "textarea"
+  mutable      = true
+  icon         = ""
+}
+
 module "ansible-tools" {
-  source   = "./modules/ansible-tools"
-  agent_id = coder_agent.main.id
+  source            = "./modules/ansible-tools"
+  agent_id          = coder_agent.main.id
+  ansible_config    = data.coder_parameter.ansible_config.value
+  ansible_inventory = data.coder_parameter.ansible_inventory.value
+  ssh_private_key   = data.coder_parameter.ssh_private_key.value
+}
+
+data "coder_parameter" "sops_age_key" {
+  name         = "sops_age_key"
+  display_name = "SOPS Age Key"
+  description  = "(Optional) Paste your SOPS Age private key content"
+  default      = ""
+  type         = "string"
+  form_type    = "textarea"
+  mutable      = true
+  icon         = "/icon/k8s.png"
 }
 
 module "sops-tools" {
-  source   = "./modules/sops-tools"
-  agent_id = coder_agent.main.id
+  source       = "./modules/sops-tools"
+  agent_id     = coder_agent.main.id
+  sops_age_key = data.coder_parameter.sops_age_key.value
 }
 
 module "github-tools" {

@@ -212,9 +212,21 @@ module "github-tools" {
   agent_id = coder_agent.main.id
 }
 
+data "coder_parameter" "sops_age_key" {
+  name         = "sops_age_key"
+  display_name = "SOPS Age Key"
+  description  = "(Optional) Paste your SOPS Age private key content"
+  default      = ""
+  type         = "string"
+  form_type    = "textarea"
+  mutable      = true
+  icon         = "/icon/k8s.png"
+}
+
 module "sops-tools" {
-  source   = "./modules/sops-tools"
-  agent_id = coder_agent.main.id
+  source       = "./modules/sops-tools"
+  agent_id     = coder_agent.main.id
+  sops_age_key = data.coder_parameter.sops_age_key.value
 }
 
 data "coder_external_auth" "github" {

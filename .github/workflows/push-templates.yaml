@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "templates/**"
+      - "modules/**"
   workflow_dispatch:
 
 jobs:
@@ -43,9 +44,17 @@ jobs:
               CHANGED_FILES=$(git diff --name-only $BASE_SHA $HEAD_SHA)
           fi
 
-          # Filter for template directories
-          # Sort and unique to avoid duplicates
-          TEMPLATES=$(echo "$CHANGED_FILES" | grep '^templates/' | cut -d/ -f2 | sort | uniq | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          # Check if any shared module changed
+          if echo "$CHANGED_FILES" | grep -q '^modules/'; then
+              echo "Shared modules changed. Pushing all templates."
+              TEMPLATES=$(find templates -maxdepth 2 -name "main.tf" -printf '%h\n' | \
+                sed 's|templates/||' | \
+                jq -R -s -c 'split("\n") | map(select(length > 0))')
+          else
+              # Filter for template directories
+              # Sort and unique to avoid duplicates
+              TEMPLATES=$(echo "$CHANGED_FILES" | grep '^templates/' | cut -d/ -f2 | sort | uniq | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          fi
 
           # Fallback to empty array if no templates changed, to avoid JSON errors
           if [ -z "$TEMPLATES" ] || [ "$TEMPLATES" == "[]" ]; then

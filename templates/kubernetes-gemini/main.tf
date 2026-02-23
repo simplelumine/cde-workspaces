@@ -244,7 +244,7 @@ data "coder_parameter" "gemini_base_url" {
 
 module "gemini" {
   count            = data.coder_workspace.me.start_count
-  source           = "./modules/gemini"
+  source           = "../../modules/gemini"
   agent_id         = coder_agent.main.id
   folder           = "/home/coder/projects"
   gemini_api_key   = data.coder_parameter.gemini_api_key.value

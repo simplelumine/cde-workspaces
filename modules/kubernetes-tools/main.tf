@@ -17,6 +17,12 @@ variable "default" {
   default     = "true"
 }
 
+variable "kubeconfig" {
+  type        = string
+  description = "The kubeconfig YAML content to inject into the workspace"
+  default     = ""
+}
+
 data "coder_parameter" "install_k8s_tools" {
   name         = "install_k8s_tools"
   display_name = "Install Kubernetes Tools"
@@ -57,6 +63,13 @@ resource "coder_script" "kubernetes_tools" {
         curl -fsSL "https://github.com/derailed/k9s/releases/download/v$${K9S_VERSION}/k9s_Linux_amd64.tar.gz" | tar xz -C /tmp
         sudo mv /tmp/k9s /usr/local/bin/
       fi
+    fi
+
+    if [ -n "${var.kubeconfig}" ]; then
+      echo "Injecting kubeconfig..."
+      mkdir -p ~/.kube
+      echo "${var.kubeconfig}" > ~/.kube/config
+      chmod 600 ~/.kube/config
     fi
   EOT
 }

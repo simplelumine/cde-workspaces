@@ -192,9 +192,23 @@ module "antigravity" {
   folder = "/home/coder/projects"
 }
 
+data "coder_parameter" "kubeconfig" {
+  name         = "kubeconfig"
+  display_name = "Kubeconfig"
+  description  = "Paste your kubeconfig YAML content"
+  default      = ""
+  type         = "string"
+  icon         = "/icon/k8s.png"
+  mutable      = true
+  
+  # Use textarea explicitly if supported, or rely on string default behavior
+  # form_type    = "textarea" # Depending on Coder version, this might be valid or deprecated
+}
+
 module "kubernetes-tools" {
-  source   = "./modules/kubernetes-tools"
-  agent_id = coder_agent.main.id
+  source     = "./modules/kubernetes-tools"
+  agent_id   = coder_agent.main.id
+  kubeconfig = data.coder_parameter.kubeconfig.value
 }
 
 module "terraform-tools" {
@@ -224,6 +238,12 @@ module "github-tools" {
 
 data "coder_external_auth" "github" {
   id = "primary-github"
+}
+
+module "git-config" {
+  source   = "registry.coder.com/coder/git-config/coder"
+  version  = "1.0.33"
+  agent_id = coder_agent.main.id
 }
 
 module "git-signing" {

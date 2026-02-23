@@ -98,10 +98,14 @@ variable "agentapi_version" {
   default     = "v0.10.0"
 }
 
-variable "gemini_model" {
-  type        = string
-  description = "The model to use for Gemini (e.g., gemini-2.5-pro)."
-  default     = ""
+data "coder_parameter" "gemini_model" {
+  name         = "gemini_model"
+  display_name = "Gemini Model"
+  description  = "The model to use for Gemini (e.g., gemini-2.5-pro, gemini-2.5-flash)."
+  default      = ""
+  mutable      = true
+  type         = "string"
+  icon         = "/icon/gemini.svg"
 }
 
 variable "pre_install_script" {
@@ -134,10 +138,14 @@ variable "gemini_system_prompt" {
   default     = ""
 }
 
-variable "enable_yolo_mode" {
-  type        = bool
-  description = "Enable YOLO mode to automatically approve all tool calls without user confirmation. Use with caution."
-  default     = false
+data "coder_parameter" "enable_yolo_mode" {
+  name         = "enable_yolo_mode"
+  display_name = "Enable YOLO Mode"
+  description  = "Enable YOLO mode to automatically approve all tool calls without user confirmation. Use with caution."
+  default      = "false"
+  mutable      = true
+  type         = "bool"
+  icon         = "/icon/gemini.svg"
 }
 
 resource "coder_env" "gemini_api_key" {
@@ -238,8 +246,8 @@ module "agentapi" {
      GEMINI_API_KEY='${data.coder_parameter.gemini_api_key.value}' \
      GOOGLE_API_KEY='${data.coder_parameter.gemini_api_key.value}' \
      GOOGLE_GENAI_USE_VERTEXAI='${var.use_vertexai}' \
-     GEMINI_YOLO_MODE='${var.enable_yolo_mode}' \
-     GEMINI_MODEL='${var.gemini_model}' \
+     GEMINI_YOLO_MODE='${data.coder_parameter.enable_yolo_mode.value}' \
+     GEMINI_MODEL='${data.coder_parameter.gemini_model.value}' \
      GEMINI_START_DIRECTORY='${var.folder}' \
      GEMINI_TASK_PROMPT='${var.task_prompt}' \
      /tmp/start.sh

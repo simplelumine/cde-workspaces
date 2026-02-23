@@ -1,0 +1,62 @@
+terraform {
+  required_providers {
+    coder = {
+      source = "coder/coder"
+    }
+  }
+}
+
+variable "agent_id" {
+  type        = string
+  description = "The ID of a Coder agent."
+}
+
+variable "default" {
+  type        = string
+  description = "Default value for the parameter"
+  default     = "true"
+}
+
+data "coder_parameter" "install_k8s_tools" {
+  name         = "install_k8s_tools"
+  display_name = "Install Kubernetes Tools"
+  description  = "Install kubectl, helm, and k9s in the workspace"
+  default      = var.default
+  type         = "bool"
+  mutable      = true
+  icon         = "/icon/k8s.png"
+}
+
+resource "coder_script" "kubernetes_tools" {
+  agent_id     = var.agent_id
+  display_name = "Install Kubernetes Tools"
+  icon         = "/icon/k8s.png"
+  run_on_start = true
+  script       = <<EOT
+    #!/bin/bash
+    set -e
+
+    if [ "${data.coder_parameter.install_k8s_tools.value}" = "true" ]; then
+      echo "Installing Kubernetes Tools..."
+
+      # Install kubectl
+      if ! command -v kubectl >/dev/null 2>&1; then
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        sudo mv kubectl /usr/local/bin/
+      fi
+
+      # Install helm
+      if ! command -v helm >/dev/null 2>&1; then
+        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      fi
+
+      # Install k9s
+      if ! command -v k9s >/dev/null 2>&1; then
+        K9S_VERSION=$(curl -sI https://github.com/derailed/k9s/releases/latest | awk -F/ '/^location:/ || /^Location:/ {print $NF}' | tr -d '\r' | sed 's/^v//')
+        curl -fsSL "https://github.com/derailed/k9s/releases/download/v$${K9S_VERSION}/k9s_Linux_amd64.tar.gz" | tar xz -C /tmp
+        sudo mv /tmp/k9s /usr/local/bin/
+      fi
+    fi
+  EOT
+}

@@ -118,32 +118,7 @@ resource "coder_agent" "main" {
     # Start code-server in the background.
     /tmp/code-server/bin/code-server --auth none --port 13337 >/tmp/code-server.log 2>&1 &
 
-    # Install Kubernetes Tools (kubectl, helm) if requested
-    if [ "${data.coder_parameter.install_k8s_tools.value}" = "true" ]; then
-      echo "Installing Kubernetes Tools..."
 
-      # Install kubectl
-      if ! command -v kubectl &> /dev/null; then
-        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-        chmod +x kubectl
-        sudo mv kubectl /usr/local/bin/
-      fi
-
-      # Install helm
-      if ! command -v helm &> /dev/null; then
-        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-      fi
-    fi
-
-    # Install GitHub CLI (gh)
-    if [ "${data.coder_parameter.install_github_cli.value}" = "true" ]; then
-      if ! command -v gh >/dev/null 2>&1; then
-        echo "Installing GitHub CLI..."
-        GH_VERSION=$(curl -sI https://github.com/cli/cli/releases/latest | awk -F/ '/^location:/ || /^Location:/ {print $NF}' | tr -d '\r' | sed 's/^v//')
-        curl -fsSL "https://github.com/cli/cli/releases/download/v$${GH_VERSION}/gh_$${GH_VERSION}_linux_amd64.tar.gz" | tar xz -C /tmp
-        sudo mv /tmp/gh_$${GH_VERSION}_linux_amd64/bin/gh /usr/local/bin/
-      fi
-    fi
   EOT
 
   env = {
@@ -214,17 +189,27 @@ module "antigravity" {
   folder = "/home/coder/projects"
 }
 
+module "kubernetes-tools" {
+  source   = "../../modules/kubernetes-tools"
+  agent_id = coder_agent.main.id
+}
+
+module "github-tools" {
+  source   = "../../modules/github-tools"
+  agent_id = coder_agent.main.id
+}
+
 data "coder_external_auth" "github" {
   id = "primary-github"
 }
 
 module "git-signing" {
-  source   = "./modules/git-signing"
+  source   = "../../modules/git-signing"
   agent_id = coder_agent.main.id
 }
 
 module "git-clone" {
-  source   = "./modules/git-clone"
+  source   = "../../modules/git-clone"
   agent_id = coder_agent.main.id
   base_dir = "/home/coder/projects"
 }
@@ -255,26 +240,6 @@ data "coder_parameter" "gemini_base_url" {
   mutable      = true
   type         = "string"
   icon         = "/icon/gemini.svg"
-}
-
-data "coder_parameter" "install_k8s_tools" {
-  name         = "install_k8s_tools"
-  display_name = "Install Kubernetes Tools"
-  description  = "Install kubectl and helm in the workspace"
-  default      = "false"
-  type         = "bool"
-  mutable      = true
-  icon         = "/icon/k8s.png"
-}
-
-data "coder_parameter" "install_github_cli" {
-  name         = "install_github_cli"
-  display_name = "Install GitHub CLI"
-  description  = "Install the official GitHub CLI (gh) and auto-authenticate it with Coder's GitHub OAuth token"
-  default      = "true"
-  type         = "bool"
-  mutable      = true
-  icon         = "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/github.svg"
 }
 
 module "gemini" {

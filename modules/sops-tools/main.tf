@@ -1,0 +1,76 @@
+terraform {
+  required_providers {
+    coder = {
+      source = "coder/coder"
+    }
+  }
+}
+
+variable "agent_id" {
+  type        = string
+  description = "The ID of a Coder agent."
+}
+
+variable "default" {
+  type        = string
+  description = "Default value for the parameter"
+  default     = "false"
+}
+
+data "coder_parameter" "install_sops_age_tools" {
+  name         = "install_sops_age_tools"
+  display_name = "Install SOPS & Age"
+  description  = "Install SOPS and age tools for gitops secret management"
+  default      = var.default
+  type         = "bool"
+  mutable      = true
+  icon         = "/icon/k8s.png"
+}
+
+data "coder_parameter" "sops_age_key" {
+  name         = "sops_age_key"
+  display_name = "SOPS Age Key"
+  description  = "(Optional) Paste your SOPS Age private key content"
+  default      = ""
+  type         = "string"
+  form_type    = "textarea"
+  mutable      = true
+  icon         = "/icon/k8s.png"
+}
+
+resource "coder_script" "sops_tools" {
+  agent_id     = var.agent_id
+  display_name = "Install SOPS & Age"
+  icon         = "/icon/k8s.png"
+  run_on_start = true
+  script       = <<EOT
+    #!/bin/bash
+    set -e
+
+    if [ "${data.coder_parameter.install_sops_age_tools.value}" = "true" ]; then
+      echo "Installing SOPS and Age..."
+      if ! command -v sops >/dev/null 2>&1; then
+        SOPS_VERSION=$(curl -sI https://github.com/getsops/sops/releases/latest | awk -F/ '/^location:/ || /^Location:/ {print $NF}' | tr -d '\r' | sed 's/^v//')
+        curl -fsSL -o /tmp/sops "https://github.com/getsops/sops/releases/download/v$${SOPS_VERSION}/sops-v$${SOPS_VERSION}.linux.amd64"
+        chmod +x /tmp/sops
+        sudo mv /tmp/sops /usr/local/bin/
+      fi
+
+      if ! command -v age >/dev/null 2>&1; then
+        AGE_VERSION=$(curl -sI https://github.com/FiloSottile/age/releases/latest | awk -F/ '/^location:/ || /^Location:/ {print $NF}' | tr -d '\r' | sed 's/^v//')
+        curl -fsSL "https://github.com/FiloSottile/age/releases/download/v$${AGE_VERSION}/age-v$${AGE_VERSION}-linux-amd64.tar.gz" | tar xz -C /tmp
+        sudo mv /tmp/age/age /usr/local/bin/
+        sudo mv /tmp/age/age-keygen /usr/local/bin/
+      fi
+    fi
+
+    if [ -n "${data.coder_parameter.sops_age_key.value}" ]; then
+      echo "Injecting SOPS Age Key..."
+      mkdir -p ~/.config/sops/age
+      cat > ~/.config/sops/age/keys.txt <<'SOPS_EOF'
+${data.coder_parameter.sops_age_key.value}
+SOPS_EOF
+      chmod 600 ~/.config/sops/age/keys.txt
+    fi
+  EOT
+}

@@ -221,34 +221,11 @@ module "github-upload-public-key" {
   external_auth_id = data.coder_external_auth.github.id
 }
 
-# Gemini CLI
-data "coder_parameter" "gemini_api_key" {
-  name         = "gemini_api_key"
-  display_name = "Gemini API Key"
-  description  = "Your Gemini API Key"
-  default      = ""
-  mutable      = true
-  type         = "string"
-  icon         = "/icon/gemini.svg"
-}
-
-data "coder_parameter" "gemini_base_url" {
-  name         = "gemini_base_url"
-  display_name = "Gemini Base URL"
-  description  = "Custom base URL for Gemini API (e.g., a proxy endpoint). Leave empty for default."
-  default      = ""
-  mutable      = true
-  type         = "string"
-  icon         = "/icon/gemini.svg"
-}
-
 module "gemini" {
   count            = data.coder_workspace.me.start_count
   source           = "../../modules/gemini"
   agent_id         = coder_agent.main.id
   folder           = "/home/coder/projects"
-  gemini_api_key   = data.coder_parameter.gemini_api_key.value
-  gemini_base_url  = data.coder_parameter.gemini_base_url.value
 }
 
 # code-server

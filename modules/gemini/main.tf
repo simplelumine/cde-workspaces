@@ -60,17 +60,24 @@ variable "gemini_settings_json" {
   default     = ""
 }
 
-variable "gemini_api_key" {
-  type        = string
-  description = "Gemini API Key"
-  default     = ""
-  sensitive   = true
+data "coder_parameter" "gemini_api_key" {
+  name         = "gemini_api_key"
+  display_name = "Gemini API Key"
+  description  = "Your Gemini API Key"
+  default      = ""
+  mutable      = true
+  type         = "string"
+  icon         = "/icon/gemini.svg"
 }
 
-variable "gemini_base_url" {
-  type        = string
-  description = "Custom base URL for Gemini API (e.g., a proxy endpoint)"
-  default     = ""
+data "coder_parameter" "gemini_base_url" {
+  name         = "gemini_base_url"
+  display_name = "Gemini Base URL"
+  description  = "Custom base URL for Gemini API (e.g., a proxy endpoint). Leave empty for default."
+  default      = ""
+  mutable      = true
+  type         = "string"
+  icon         = "/icon/gemini.svg"
 }
 
 variable "use_vertexai" {
@@ -136,13 +143,13 @@ variable "enable_yolo_mode" {
 resource "coder_env" "gemini_api_key" {
   agent_id = var.agent_id
   name     = "GEMINI_API_KEY"
-  value    = var.gemini_api_key
+  value    = data.coder_parameter.gemini_api_key.value
 }
 
 resource "coder_env" "google_api_key" {
   agent_id = var.agent_id
   name     = "GOOGLE_API_KEY"
-  value    = var.gemini_api_key
+  value    = data.coder_parameter.gemini_api_key.value
 }
 
 resource "coder_env" "gemini_use_vertex_ai" {
@@ -152,10 +159,10 @@ resource "coder_env" "gemini_use_vertex_ai" {
 }
 
 resource "coder_env" "gemini_base_url" {
-  count    = var.gemini_base_url != "" ? 1 : 0
+  count    = data.coder_parameter.gemini_base_url.value != "" ? 1 : 0
   agent_id = var.agent_id
   name     = "GOOGLE_GEMINI_BASE_URL"
-  value    = var.gemini_base_url
+  value    = data.coder_parameter.gemini_base_url.value
 }
 
 locals {
@@ -228,8 +235,8 @@ module "agentapi" {
 
      echo -n '${base64encode(local.start_script)}' | base64 -d > /tmp/start.sh
      chmod +x /tmp/start.sh
-     GEMINI_API_KEY='${var.gemini_api_key}' \
-     GOOGLE_API_KEY='${var.gemini_api_key}' \
+     GEMINI_API_KEY='${data.coder_parameter.gemini_api_key.value}' \
+     GOOGLE_API_KEY='${data.coder_parameter.gemini_api_key.value}' \
      GOOGLE_GENAI_USE_VERTEXAI='${var.use_vertexai}' \
      GEMINI_YOLO_MODE='${var.enable_yolo_mode}' \
      GEMINI_MODEL='${var.gemini_model}' \

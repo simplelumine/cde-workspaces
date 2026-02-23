@@ -82,6 +82,11 @@ jobs:
 
       - name: Push and Update ${{ matrix.template }} template
         run: |
+          # The template relies on shared modules, but Coder CLI does not bundle files 
+          # outside the target directory. We copy the shared modules into the template here.
+          rm -rf ./templates/${{ matrix.template }}/modules
+          cp -R ./modules ./templates/${{ matrix.template }}/modules
+          
           # Push the template (creates/updates version)
           coder templates push ${{ matrix.template }} \
             -d ./templates/${{ matrix.template }} \

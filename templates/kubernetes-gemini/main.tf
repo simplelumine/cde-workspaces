@@ -190,12 +190,12 @@ module "antigravity" {
 }
 
 module "kubernetes-tools" {
-  source   = "../../modules/kubernetes-tools"
+  source   = "./modules/kubernetes-tools"
   agent_id = coder_agent.main.id
 }
 
 module "github-tools" {
-  source   = "../../modules/github-tools"
+  source   = "./modules/github-tools"
   agent_id = coder_agent.main.id
 }
 
@@ -204,12 +204,12 @@ data "coder_external_auth" "github" {
 }
 
 module "git-signing" {
-  source   = "../../modules/git-signing"
+  source   = "./modules/git-signing"
   agent_id = coder_agent.main.id
 }
 
 module "git-clone" {
-  source   = "../../modules/git-clone"
+  source   = "./modules/git-clone"
   agent_id = coder_agent.main.id
   base_dir = "/home/coder/projects"
 }
@@ -223,7 +223,7 @@ module "github-upload-public-key" {
 
 module "gemini" {
   count            = data.coder_workspace.me.start_count
-  source           = "../../modules/gemini"
+  source           = "./modules/gemini"
   agent_id         = coder_agent.main.id
   folder           = "/home/coder/projects"
 }

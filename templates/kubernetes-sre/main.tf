@@ -193,32 +193,32 @@ module "antigravity" {
 }
 
 module "kubernetes-tools" {
-  source   = "../../modules/kubernetes-tools"
+  source   = "./modules/kubernetes-tools"
   agent_id = coder_agent.main.id
 }
 
 module "terraform-tools" {
-  source   = "../../modules/terraform-tools"
+  source   = "./modules/terraform-tools"
   agent_id = coder_agent.main.id
 }
 
 module "flux-tools" {
-  source   = "../../modules/flux-tools"
+  source   = "./modules/flux-tools"
   agent_id = coder_agent.main.id
 }
 
 module "ansible-tools" {
-  source   = "../../modules/ansible-tools"
+  source   = "./modules/ansible-tools"
   agent_id = coder_agent.main.id
 }
 
 module "sops-tools" {
-  source   = "../../modules/sops-tools"
+  source   = "./modules/sops-tools"
   agent_id = coder_agent.main.id
 }
 
 module "github-tools" {
-  source   = "../../modules/github-tools"
+  source   = "./modules/github-tools"
   agent_id = coder_agent.main.id
 }
 
@@ -227,12 +227,12 @@ data "coder_external_auth" "github" {
 }
 
 module "git-signing" {
-  source   = "../../modules/git-signing"
+  source   = "./modules/git-signing"
   agent_id = coder_agent.main.id
 }
 
 module "git-clone" {
-  source   = "../../modules/git-clone"
+  source   = "./modules/git-clone"
   agent_id = coder_agent.main.id
   base_dir = "/home/coder/projects"
 }

@@ -391,6 +391,7 @@ resource "kubernetes_deployment_v1" "main" {
         }
       }
       spec {
+        service_account_name = "coder-sre-sa"
         security_context {
           run_as_user     = 1000
           fs_group        = 1000

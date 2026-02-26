@@ -219,27 +219,6 @@ module "flux-tools" {
   agent_id = coder_agent.main.id
 }
 
-data "coder_parameter" "ansible_config" {
-  name         = "ansible_config"
-  display_name = "Ansible Config"
-  description  = "(Optional) Paste your ~/.ansible.cfg content"
-  default      = ""
-  type         = "string"
-  form_type    = "textarea"
-  mutable      = true
-  icon         = "/icon/ansible.svg"
-}
-
-data "coder_parameter" "ansible_inventory" {
-  name         = "ansible_inventory"
-  display_name = "Ansible Inventory"
-  description  = "(Optional) Paste your ~/inventory.ini content"
-  default      = ""
-  type         = "string"
-  form_type    = "textarea"
-  mutable      = true
-  icon         = "/icon/ansible.svg"
-}
 
 data "coder_parameter" "ssh_private_key" {
   name         = "ssh_private_key"
@@ -253,11 +232,9 @@ data "coder_parameter" "ssh_private_key" {
 }
 
 module "ansible-tools" {
-  source            = "./modules/ansible-tools"
-  agent_id          = coder_agent.main.id
-  ansible_config    = data.coder_parameter.ansible_config.value
-  ansible_inventory = data.coder_parameter.ansible_inventory.value
-  ssh_private_key   = data.coder_parameter.ssh_private_key.value
+  source          = "./modules/ansible-tools"
+  agent_id        = coder_agent.main.id
+  ssh_private_key = data.coder_parameter.ssh_private_key.value
 }
 
 data "coder_parameter" "sops_age_key" {

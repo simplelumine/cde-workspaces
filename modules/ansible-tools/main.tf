@@ -27,18 +27,6 @@ data "coder_parameter" "install_ansible_tools" {
   icon         = "/icon/ansible.svg"
 }
 
-variable "ansible_config" {
-  type        = string
-  description = "The ~/.ansible.cfg content to inject"
-  default     = ""
-}
-
-variable "ansible_inventory" {
-  type        = string
-  description = "The ~/inventory.ini content to inject"
-  default     = ""
-}
-
 variable "ssh_private_key" {
   type        = string
   description = "The SSH private key to inject for git/ansible"
@@ -69,20 +57,6 @@ resource "coder_script" "ansible_tools" {
 ${var.ssh_private_key}
 SSH_EOF
       chmod 600 ~/.ssh/id_ed25519
-    fi
-
-    if [ -n "${var.ansible_config}" ]; then
-      echo "Injecting Ansible Config..."
-      cat > ~/.ansible.cfg <<'ANSIBLE_CFG_EOF'
-${var.ansible_config}
-ANSIBLE_CFG_EOF
-    fi
-
-    if [ -n "${var.ansible_inventory}" ]; then
-      echo "Injecting Ansible Inventory..."
-      cat > ~/inventory.ini <<'ANSIBLE_INV_EOF'
-${var.ansible_inventory}
-ANSIBLE_INV_EOF
     fi
   EOT
 }

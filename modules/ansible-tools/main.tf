@@ -48,7 +48,7 @@ resource "coder_script" "ansible_tools" {
         sudo -u coder pip3 install --user ansible-core --break-system-packages
         sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y sshpass
         echo "Installing Ansible Collections..."
-        ansible-galaxy collection install community.general
+        ansible-galaxy collection install community.general ansible.posix
       fi
     fi
 

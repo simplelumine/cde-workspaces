@@ -59,6 +59,9 @@ resource "coder_script" "ansible_tools" {
 ${var.ssh_private_key}
 SSH_EOF
       chmod 600 ~/.ssh/id_ed25519
+      echo "Generating SSH Public Key from private key..."
+      ssh-keygen -y -f ~/.ssh/id_ed25519 > ~/.ssh/id_ed25519.pub
+      chmod 644 ~/.ssh/id_ed25519.pub
     fi
   EOT
 }

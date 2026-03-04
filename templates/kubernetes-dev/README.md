@@ -1,20 +1,20 @@
 ---
-display_name: Kubernetes (Developer)
-description: Developer environment with Git configuration and essential tools
+display_name: Kubernetes (Dev)
+description: Dev environment with Git configuration and essential tools
 icon: /icon/k8s.png
 verified: true
-tags: [kubernetes, git, developer]
+tags: [kubernetes, git, dev]
 ---
 
-# Kubernetes (Developer)
+# Kubernetes (Dev)
 
-Developer workspace on Kubernetes, pre-configured with Git integration.
+Dev workspace on Kubernetes, pre-configured with Git integration.
 
 ## Features
 
 - **Persisted Home Directory**: Files in `/home/coder` are saved between restarts.
 - **Git Integration**: Comes with `git-config` and `git-commit-signing` modules for seamless version control.
-- **Pre-installed Tools**: Includes developer utilities.
+- **Pre-installed Tools**: Includes dev utilities.
 
 ## Prerequisites
 

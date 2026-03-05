@@ -68,7 +68,9 @@ resource "coder_script" "kubernetes_tools" {
     if [ -n "${var.kubeconfig}" ]; then
       echo "Injecting kubeconfig..."
       mkdir -p ~/.kube
-      echo "${var.kubeconfig}" > ~/.kube/config
+      cat > ~/.kube/config <<'KUBECONFIG_EOF'
+${var.kubeconfig}
+KUBECONFIG_EOF
       chmod 600 ~/.kube/config
     fi
   EOT

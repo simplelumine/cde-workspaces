@@ -11,12 +11,6 @@ variable "agent_id" {
   description = "The ID of a Coder agent."
 }
 
-variable "default" {
-  type        = string
-  description = "Default value for the parameter"
-  default     = "true"
-}
-
 variable "kubeconfig" {
   type        = string
   description = "The kubeconfig YAML content to inject into the workspace"
@@ -27,7 +21,7 @@ data "coder_parameter" "install_k8s_tools" {
   name         = "install_k8s_tools"
   display_name = "Install Kubernetes Tools"
   description  = "Install kubectl, helm, and k9s in the workspace"
-  default      = var.default
+  default      = false
   type         = "bool"
   mutable      = true
   icon         = "/icon/k8s.png"

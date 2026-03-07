@@ -11,17 +11,11 @@ variable "agent_id" {
   description = "The ID of a Coder agent."
 }
 
-variable "default" {
-  type        = string
-  description = "Default value for the parameter"
-  default     = "false"
-}
-
 data "coder_parameter" "install_flux_tools" {
   name         = "install_flux_tools"
   display_name = "Install Flux CLI"
   description  = "Install flux in the workspace"
-  default      = var.default
+  default      = false
   type         = "bool"
   mutable      = true
   icon         = "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/flux.svg"

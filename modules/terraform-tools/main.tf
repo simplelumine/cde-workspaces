@@ -11,17 +11,11 @@ variable "agent_id" {
   description = "The ID of a Coder agent."
 }
 
-variable "default" {
-  type        = string
-  description = "Default value for the parameter"
-  default     = "false"
-}
-
 data "coder_parameter" "install_terraform_tools" {
   name         = "install_terraform_tools"
   display_name = "Install Terraform Tools"
   description  = "Install lightweight terraform binary in the workspace for validation"
-  default      = var.default
+  default      = false
   type         = "bool"
   mutable      = true
   icon         = "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/terraform.svg"

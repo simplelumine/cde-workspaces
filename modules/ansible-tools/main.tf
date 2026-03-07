@@ -11,17 +11,11 @@ variable "agent_id" {
   description = "The ID of a Coder agent."
 }
 
-variable "default" {
-  type        = string
-  description = "Default value for the parameter"
-  default     = "false"
-}
-
 data "coder_parameter" "install_ansible_tools" {
   name         = "install_ansible_tools"
   display_name = "Install Ansible Tools"
   description  = "Install ansible in the workspace"
-  default      = var.default
+  default      = false
   type         = "bool"
   mutable      = true
   icon         = "/icon/ansible.svg"

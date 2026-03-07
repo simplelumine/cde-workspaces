@@ -11,17 +11,11 @@ variable "agent_id" {
   description = "The ID of a Coder agent."
 }
 
-variable "default" {
-  type        = string
-  description = "Default value for the parameter"
-  default     = "false"
-}
-
 data "coder_parameter" "install_sops_age_tools" {
   name         = "install_sops_age_tools"
   display_name = "Install SOPS & Age"
   description  = "Install SOPS and age tools for gitops secret management"
-  default      = var.default
+  default      = false
   type         = "bool"
   mutable      = true
   icon         = "/icon/k8s.png"

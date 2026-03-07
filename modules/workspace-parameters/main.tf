@@ -32,17 +32,25 @@ data "coder_parameter" "instance_type" {
   }
 }
 
-data "coder_parameter" "home_disk_size" {
-  name         = "home_disk_size"
-  display_name = "Home disk size"
-  description  = "The size of the home disk in GB"
-  default      = "10"
-  type         = "number"
+data "coder_parameter" "storage_tier" {
+  name         = "storage_tier"
+  display_name = "Storage Tier"
+  description  = "Select the storage volume for /home/coder. Ephemeral mode uses no persistent volume — all data is lost when the workspace stops, but allows free region migration."
+  default      = "standard"
   icon         = "/emojis/1f4be.png"
   mutable      = false
-  validation {
-    min = 1
-    max = 99999
+
+  option {
+    name  = "⚡ Ephemeral (No Disk) — DATA LOST ON STOP"
+    value = "ephemeral"
+  }
+  option {
+    name  = "Standard (10 GB)"
+    value = "standard"
+  }
+  option {
+    name  = "Expanded (30 GB)"
+    value = "expanded"
   }
 }
 
@@ -59,6 +67,11 @@ locals {
     "pro"   = "4"
     "ultra" = "6"
   }
+  disk_size_map = {
+    "ephemeral" = "0"
+    "standard"  = "10"
+    "expanded"  = "30"
+  }
 }
 
 output "cpu" {
@@ -72,5 +85,11 @@ output "memory" {
 }
 
 output "home_disk_size" {
-  value = data.coder_parameter.home_disk_size.value
+  description = "The resolved disk size based on storage tier"
+  value       = local.disk_size_map[data.coder_parameter.storage_tier.value]
+}
+
+output "is_ephemeral" {
+  description = "Whether the workspace uses ephemeral (non-persistent) storage"
+  value       = data.coder_parameter.storage_tier.value == "ephemeral"
 }

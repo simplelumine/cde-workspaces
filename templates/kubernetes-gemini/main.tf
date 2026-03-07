@@ -32,7 +32,7 @@ variable "namespace" {
 }
 
 module "workspace-parameters" {
-  source = "../../modules/workspace-parameters"
+  source = "./modules/workspace-parameters"
 }
 
 provider "kubernetes" {
@@ -130,7 +130,7 @@ module "antigravity" {
 }
 
 module "region-parameter" {
-  source = "../../modules/region-parameter"
+  source = "./modules/region-parameter"
 }
 
 module "kubernetes-tools" {

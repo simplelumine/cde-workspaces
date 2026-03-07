@@ -31,68 +31,8 @@ variable "namespace" {
   description = "The Kubernetes namespace to create workspaces in (must exist prior to creating workspaces). If the Coder host is itself running as a Pod on the same Kubernetes cluster as you are deploying workspaces to, set this to the same namespace."
 }
 
-data "coder_parameter" "cpu" {
-  name         = "cpu"
-  display_name = "CPU"
-  description  = "The number of CPU cores"
-  default      = "2"
-  icon         = "/icon/memory.svg"
-  mutable      = true
-  option {
-    name  = "2 Cores"
-    value = "2"
-  }
-  option {
-    name  = "4 Cores"
-    value = "4"
-  }
-  option {
-    name  = "6 Cores"
-    value = "6"
-  }
-  option {
-    name  = "8 Cores"
-    value = "8"
-  }
-}
-
-data "coder_parameter" "memory" {
-  name         = "memory"
-  display_name = "Memory"
-  description  = "The amount of memory in GB"
-  default      = "2"
-  icon         = "/icon/memory.svg"
-  mutable      = true
-  option {
-    name  = "2 GB"
-    value = "2"
-  }
-  option {
-    name  = "4 GB"
-    value = "4"
-  }
-  option {
-    name  = "6 GB"
-    value = "6"
-  }
-  option {
-    name  = "8 GB"
-    value = "8"
-  }
-}
-
-data "coder_parameter" "home_disk_size" {
-  name         = "home_disk_size"
-  display_name = "Home disk size"
-  description  = "The size of the home disk in GB"
-  default      = "10"
-  type         = "number"
-  icon         = "/emojis/1f4be.png"
-  mutable      = false
-  validation {
-    min = 1
-    max = 99999
-  }
+module "workspace-parameters" {
+  source = "../../modules/workspace-parameters"
 }
 
 provider "kubernetes" {
@@ -190,6 +130,10 @@ module "antigravity" {
   version  = "1.0.0"
   agent_id = coder_agent.main.id  
   folder = "/home/coder/projects"
+}
+
+module "region-parameter" {
+  source = "../../modules/region-parameter"
 }
 
 module "kubernetes-tools" {
@@ -299,7 +243,7 @@ resource "kubernetes_persistent_volume_claim_v1" "home" {
     storage_class_name = "local-path"
     resources {
       requests = {
-        storage = "${data.coder_parameter.home_disk_size.value}Gi"
+        storage = "${module.workspace-parameters.home_disk_size}Gi"
       }
     }
   }
@@ -385,8 +329,8 @@ resource "kubernetes_deployment_v1" "main" {
               "memory" = "256Mi"
             }
             limits = {
-              "cpu"    = "${data.coder_parameter.cpu.value}"
-              "memory" = "${data.coder_parameter.memory.value}Gi"
+              "cpu"    = "${module.workspace-parameters.cpu}"
+              "memory" = "${module.workspace-parameters.memory}Gi"
             }
           }
           volume_mount {
@@ -418,6 +362,20 @@ resource "kubernetes_deployment_v1" "main" {
                     operator = "In"
                     values   = ["coder-workspace"]
                   }
+                }
+              }
+            }
+          }
+
+          // Prefer scheduling to the user's selected region
+          node_affinity {
+            preferred_during_scheduling_ignored_during_execution {
+              weight = 100
+              preference {
+                match_expressions {
+                  key      = "topology.kubernetes.io/region"
+                  operator = "In"
+                  values   = [module.region-parameter.value]
                 }
               }
             }

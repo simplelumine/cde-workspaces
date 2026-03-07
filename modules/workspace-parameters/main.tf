@@ -38,7 +38,7 @@ data "coder_parameter" "home_disk_size" {
   description  = "The size of the home disk in GB"
   default      = "10"
   type         = "number"
-  icon         = "/emojis/1f310.png"
+  icon         = "/emojis/1f4be.png"
   mutable      = false
   validation {
     min = 1

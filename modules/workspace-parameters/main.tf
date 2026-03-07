@@ -41,16 +41,22 @@ data "coder_parameter" "storage_tier" {
   mutable      = false
 
   option {
-    name  = "⚡ Ephemeral (No Disk) — DATA LOST ON STOP"
-    value = "ephemeral"
+    name        = "Ephemeral (No Disk)"
+    description = "⚠️ DATA LOST ON STOP. Best for quick PR reviews. Allows region migration."
+    value       = "ephemeral"
+    icon        = "/emojis/26a1.png" # ⚡
   }
   option {
-    name  = "Standard (10 GB)"
-    value = "standard"
+    name        = "Standard (10 GB)"
+    description = "Persistent home directory for daily development."
+    value       = "standard"
+    icon        = "/emojis/1f4be.png" # 💾
   }
   option {
-    name  = "Expanded (30 GB)"
-    value = "expanded"
+    name        = "Expanded (30 GB)"
+    description = "Large persistent storage for heavy dependencies and heavy builds."
+    value       = "expanded"
+    icon        = "/emojis/1f5c4.png" # 🗄️
   }
 }
 

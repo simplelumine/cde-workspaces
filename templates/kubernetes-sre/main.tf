@@ -153,6 +153,11 @@ module "kubernetes-tools" {
   kubeconfig = data.coder_parameter.kubeconfig.value
 }
 
+module "cnpg-tools" {
+  source   = "./modules/cnpg-tools"
+  agent_id = coder_agent.main.id
+}
+
 module "terraform-tools" {
   source   = "./modules/terraform-tools"
   agent_id = coder_agent.main.id

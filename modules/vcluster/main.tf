@@ -65,16 +65,6 @@ resource "helm_release" "vcluster" {
   chart      = "vcluster"
   namespace  = var.namespace
 
-  # Lightweight resource footprint
-  set {
-    name  = "controlPlane.statefulSet.resources.requests.cpu"
-    value = "100m"
-  }
-  set {
-    name  = "controlPlane.statefulSet.resources.requests.memory"
-    value = "256Mi"
-  }
-
   # Add TLS SAN for in-cluster service DNS access
   set {
     name  = "controlPlane.proxy.extraSANs[0]"

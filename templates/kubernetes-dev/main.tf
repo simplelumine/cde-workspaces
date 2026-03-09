@@ -151,10 +151,6 @@ module "ansible-tools" {
   agent_id = coder_agent.main.id
 }
 
-module "docker-tools" {
-  source   = "./modules/docker-tools"
-  agent_id = coder_agent.main.id
-}
 
 module "github-tools" {
   source   = "./modules/github-tools"
@@ -329,13 +325,7 @@ resource "kubernetes_deployment_v1" "main" {
             name  = "CODER_AGENT_TOKEN"
             value = coder_agent.main.token
           }
-          dynamic "env" {
-            for_each = module.docker-tools.enabled ? [1] : []
-            content {
-              name  = "DOCKER_HOST"
-              value = "localhost:2375"
-            }
-          }
+
           resources {
             requests = {
               "cpu"    = "100m"
@@ -353,37 +343,6 @@ resource "kubernetes_deployment_v1" "main" {
           }
         }
 
-        # Docker-in-Docker sidecar container (only when Docker is enabled)
-        # Reference: https://coder.com/docs/admin/templates/extending-templates/docker-in-workspaces#privileged-sidecar-container
-        dynamic "container" {
-          for_each = module.docker-tools.enabled ? [1] : []
-          content {
-            name  = "docker-sidecar"
-            image = "docker:dind"
-            security_context {
-              privileged  = true
-              run_as_user = 0
-            }
-            env {
-              name  = "DOCKER_TLS_CERTDIR"
-              value = ""
-            }
-            command = ["dockerd", "-H", "tcp://127.0.0.1:2375"]
-            volume_mount {
-              mount_path = "/var/lib/docker"
-              name       = "docker-data"
-              read_only  = false
-            }
-            # This is critical! Mount the exact same workspace volume to the exact same path
-            # so that `docker run -v $(pwd):/app` works seamlessly.
-            volume_mount {
-              mount_path = "/home/coder"
-              name       = "home"
-              read_only  = false
-            }
-          }
-        }
-
         volume {
           name = "home"
 
@@ -398,15 +357,6 @@ resource "kubernetes_deployment_v1" "main" {
           dynamic "empty_dir" {
             for_each = module.workspace-parameters.is_ephemeral ? [1] : []
             content {}
-          }
-        }
-
-        # Volume for Docker-in-Docker data (images, layers, etc.)
-        dynamic "volume" {
-          for_each = module.docker-tools.enabled ? [1] : []
-          content {
-            name = "docker-data"
-            empty_dir {}
           }
         }
 

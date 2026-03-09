@@ -374,6 +374,13 @@ resource "kubernetes_deployment_v1" "main" {
               name       = "docker-data"
               read_only  = false
             }
+            # This is critical! Mount the exact same workspace volume to the exact same path
+            # so that `docker run -v $(pwd):/app` works seamlessly.
+            volume_mount {
+              mount_path = "/home/coder"
+              name       = "home"
+              read_only  = false
+            }
           }
         }
 

@@ -65,33 +65,32 @@ resource "helm_release" "vcluster" {
   chart      = "vcluster"
   namespace  = var.namespace
 
-  # Lightweight k3s resource footprint
+  # Lightweight resource footprint
   set {
-    name  = "vcluster.resources.requests.cpu"
+    name  = "controlPlane.statefulSet.resources.requests.cpu"
     value = "100m"
   }
   set {
-    name  = "vcluster.resources.requests.memory"
+    name  = "controlPlane.statefulSet.resources.requests.memory"
     value = "256Mi"
   }
 
-
   # Add TLS SAN for in-cluster service DNS access
   set {
-    name  = "syncer.extraArgs"
-    value = "{--tls-san=${local.vcluster_name}.${var.namespace}.svc.cluster.local}"
+    name  = "controlPlane.proxy.extraSANs[0]"
+    value = "${local.vcluster_name}.${var.namespace}.svc.cluster.local"
   }
 
   # Disable persistence if workspace is ephemeral
   set {
-    name  = "vcluster.persistence.volumeClaim.enabled"
+    name  = "controlPlane.statefulSet.persistence.volumeClaim.enabled"
     value = var.is_ephemeral ? "false" : "auto"
   }
 
   # CRITICAL: Automatically clean up the vcluster PVC when the workspace is destroyed!
   # Prevents zombie PVCs from leaking into the host cluster.
   set {
-    name  = "vcluster.persistence.volumeClaim.retentionPolicy"
+    name  = "controlPlane.statefulSet.persistence.volumeClaim.retentionPolicy"
     value = "Delete"
   }
 

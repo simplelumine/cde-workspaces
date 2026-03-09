@@ -53,6 +53,30 @@ provider "helm" {
 data "coder_workspace" "me" {}
 data "coder_workspace_owner" "me" {}
 
+locals {
+  # Provide a dedicated namespace per workspace
+  # e.g., "coder-alice-dev"
+  workspace_namespace = lower("coder-${data.coder_workspace_owner.me.name}-${data.coder_workspace.me.name}")
+}
+
+resource "kubernetes_namespace" "workspace" {
+  metadata {
+    name = local.workspace_namespace
+    labels = {
+      "app.kubernetes.io/name"     = "coder-workspace"
+      "app.kubernetes.io/part-of"  = "coder"
+      "com.coder.resource"         = "true"
+      "com.coder.workspace.id"     = data.coder_workspace.me.id
+      "com.coder.workspace.name"   = data.coder_workspace.me.name
+      "com.coder.user.id"          = data.coder_workspace_owner.me.id
+      "com.coder.user.username"    = data.coder_workspace_owner.me.name
+    }
+    annotations = {
+      "com.coder.user.email" = data.coder_workspace_owner.me.email
+    }
+  }
+}
+
 resource "coder_agent" "main" {
   os             = "linux"
   arch           = "amd64"
@@ -148,7 +172,7 @@ module "region-parameter" {
 
 module "vcluster" {
   source                = "./modules/vcluster"
-  namespace             = var.namespace
+  namespace             = kubernetes_namespace.workspace.metadata.0.name
   workspace_name        = data.coder_workspace.me.name
   workspace_start_count = data.coder_workspace.me.start_count
   is_ephemeral          = module.workspace-parameters.is_ephemeral
@@ -276,7 +300,7 @@ resource "kubernetes_persistent_volume_claim_v1" "home" {
   count = module.workspace-parameters.is_ephemeral ? 0 : 1
   metadata {
     name      = "coder-${data.coder_workspace.me.id}-home"
-    namespace = var.namespace
+    namespace = kubernetes_namespace.workspace.metadata.0.name
     labels = {
       "app.kubernetes.io/name"     = "coder-pvc"
       "app.kubernetes.io/instance" = "coder-pvc-${data.coder_workspace.me.id}"
@@ -312,7 +336,7 @@ resource "kubernetes_deployment_v1" "main" {
   wait_for_rollout = false
   metadata {
     name      = "coder-${data.coder_workspace.me.id}"
-    namespace = var.namespace
+    namespace = kubernetes_namespace.workspace.metadata.0.name
     labels = {
       "app.kubernetes.io/name"     = "coder-workspace"
       "app.kubernetes.io/instance" = "coder-workspace-${data.coder_workspace.me.id}"

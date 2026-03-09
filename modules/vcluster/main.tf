@@ -54,6 +54,32 @@ locals {
 }
 
 # ============================================================================
+# Create PVC for vcluster outside of Helm to survive workspace Stop/Start
+# ============================================================================
+
+resource "kubernetes_persistent_volume_claim" "vcluster_data" {
+  count = local.enabled && !var.is_ephemeral ? 1 : 0
+
+  metadata {
+    name      = "${local.vcluster_name}-data"
+    namespace = var.namespace
+    labels = {
+      "app" = local.vcluster_name
+    }
+  }
+
+  spec {
+    access_modes = ["ReadWriteOnce"]
+    storage_class_name = "local-path"
+    resources {
+      requests = {
+        storage = "10Gi" # Dedicated 10GB for vcluster data
+      }
+    }
+  }
+}
+
+# ============================================================================
 # Deploy vcluster via Helm (only when enabled and workspace is running)
 # ============================================================================
 
@@ -81,18 +107,21 @@ resource "helm_release" "vcluster" {
     value = "${local.vcluster_name}.${var.namespace}.svc.cluster.local"
   }
 
-  # Disable persistence if workspace is ephemeral
+  # If not ephemeral, use the explicitly created PVC to ensure data persistence
   set {
     name  = "controlPlane.statefulSet.persistence.volumeClaim.enabled"
-    value = var.is_ephemeral ? "false" : "auto"
+    value = var.is_ephemeral ? "false" : "true"
+  }
+  
+  set {
+    name  = "controlPlane.statefulSet.persistence.volumeClaim.existingClaim"
+    value = var.is_ephemeral ? "" : kubernetes_persistent_volume_claim.vcluster_data[0].metadata[0].name
   }
 
-  # CRITICAL: Automatically clean up the vcluster PVC when the workspace is destroyed!
-  # Prevents zombie PVCs from leaking into the host cluster.
-  set {
-    name  = "controlPlane.statefulSet.persistence.volumeClaim.retentionPolicy"
-    value = "Delete"
-  }
+  # Note: retentionPolicy is NOT set to Delete. 
+  # This ensures that when the workspace is "stopped" (count=0 -> helm uninstalls),
+  # K8s retains the PVC. Upon restart, Helm reattaches to the existing PVC, saving data!
+  # Zombie PVCs are prevented because the parent Namespace itself is deleted upon Workspace termination.
 
   wait    = true
   timeout = 300

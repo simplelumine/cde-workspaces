@@ -6,6 +6,10 @@ terraform {
     kubernetes = {
       source = "hashicorp/kubernetes"
     }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.9"
+    }
   }
 }
 
@@ -38,6 +42,12 @@ module "workspace-parameters" {
 provider "kubernetes" {
   # Authenticate via ~/.kube/config or a Coder-specific ServiceAccount, depending on admin preferences
   config_path = var.use_kubeconfig == true ? "~/.kube/config" : null
+}
+
+provider "helm" {
+  kubernetes {
+    config_path = var.use_kubeconfig == true ? "~/.kube/config" : null
+  }
 }
 
 data "coder_workspace" "me" {}
@@ -137,8 +147,9 @@ module "region-parameter" {
 }
 
 module "kubernetes-tools" {
-  source   = "./modules/kubernetes-tools"
-  agent_id = coder_agent.main.id
+  source     = "./modules/kubernetes-tools"
+  agent_id   = coder_agent.main.id
+  kubeconfig = module.vcluster.kubeconfig
 }
 
 module "terraform-tools" {
@@ -151,10 +162,16 @@ module "ansible-tools" {
   agent_id = coder_agent.main.id
 }
 
-
 module "github-tools" {
   source   = "./modules/github-tools"
   agent_id = coder_agent.main.id
+}
+
+module "vcluster" {
+  source                = "./modules/vcluster"
+  namespace             = var.namespace
+  workspace_name        = data.coder_workspace.me.name
+  workspace_start_count = data.coder_workspace.me.start_count
 }
 
 data "coder_parameter" "sops_age_key" {

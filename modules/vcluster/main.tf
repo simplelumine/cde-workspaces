@@ -119,6 +119,15 @@ data "kubernetes_secret_v1" "vcluster_kubeconfig" {
 # Outputs
 # ============================================================================
 
+locals {
+  # The in-cluster DNS address that workspace pods use to reach the vcluster API server
+  vcluster_service_url = "https://${local.vcluster_name}.${var.namespace}.svc.cluster.local:443"
+
+  # Replace localhost:8443 in the raw kubeconfig with the real in-cluster service URL
+  raw_kubeconfig = local.enabled && var.workspace_start_count > 0 ? data.kubernetes_secret_v1.vcluster_kubeconfig[0].data["config"] : ""
+  kubeconfig     = replace(local.raw_kubeconfig, "https://localhost:8443", local.vcluster_service_url)
+}
+
 output "enabled" {
   description = "Whether vcluster is enabled"
   value       = local.enabled
@@ -126,7 +135,7 @@ output "enabled" {
 
 output "kubeconfig" {
   description = "The kubeconfig YAML for the virtual cluster (empty if disabled)"
-  value       = local.enabled && var.workspace_start_count > 0 ? data.kubernetes_secret_v1.vcluster_kubeconfig[0].data["config"] : ""
+  value       = local.kubeconfig
   sensitive   = true
 }
 

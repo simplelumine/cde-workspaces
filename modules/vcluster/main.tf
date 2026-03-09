@@ -115,7 +115,7 @@ resource "helm_release" "vcluster" {
   
   set {
     name  = "controlPlane.statefulSet.persistence.volumeClaim.existingClaim"
-    value = var.is_ephemeral ? "" : kubernetes_persistent_volume_claim.vcluster_data[0].metadata[0].name
+    value = try(kubernetes_persistent_volume_claim.vcluster_data[0].metadata[0].name, "")
   }
 
   # Note: retentionPolicy is NOT set to Delete. 

@@ -151,6 +151,11 @@ module "ansible-tools" {
   agent_id = coder_agent.main.id
 }
 
+module "docker-tools" {
+  source   = "./modules/docker-tools"
+  agent_id = coder_agent.main.id
+}
+
 module "github-tools" {
   source   = "./modules/github-tools"
   agent_id = coder_agent.main.id

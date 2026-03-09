@@ -27,6 +27,12 @@ variable "workspace_start_count" {
   description = "The start count of the workspace (0 when stopped, 1 when running)"
 }
 
+variable "is_ephemeral" {
+  type        = bool
+  description = "Whether the virtual cluster should run in ephemeral mode (no persistent storage)"
+  default     = false
+}
+
 # ============================================================================
 # Parameter Toggle
 # ============================================================================
@@ -77,6 +83,12 @@ resource "helm_release" "vcluster" {
   set {
     name  = "syncer.extraArgs"
     value = "{--tls-san=${local.vcluster_name}.${var.namespace}.svc.cluster.local}"
+  }
+
+  # Disable persistence if workspace is ephemeral
+  set {
+    name  = "vcluster.persistence.volumeClaim.enabled"
+    value = var.is_ephemeral ? "false" : "auto"
   }
 
   wait    = true

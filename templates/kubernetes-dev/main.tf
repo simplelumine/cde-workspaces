@@ -172,6 +172,7 @@ module "vcluster" {
   namespace             = var.namespace
   workspace_name        = data.coder_workspace.me.name
   workspace_start_count = data.coder_workspace.me.start_count
+  is_ephemeral          = module.workspace-parameters.is_ephemeral
 }
 
 data "coder_parameter" "sops_age_key" {

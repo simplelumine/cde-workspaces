@@ -64,13 +64,6 @@ resource "coder_script" "kubernetes_tools" {
         chmod +x devspace
         sudo mv devspace /usr/local/bin/
       fi
-
-      # Install skaffold
-      if ! command -v skaffold >/dev/null 2>&1; then
-        curl -fsSL -o skaffold "https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64"
-        chmod +x skaffold
-        sudo mv skaffold /usr/local/bin/
-      fi
     fi
 
     if [ -n "${var.kubeconfig}" ]; then

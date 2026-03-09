@@ -6,6 +6,10 @@ terraform {
     kubernetes = {
       source = "hashicorp/kubernetes"
     }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.9"
+    }
   }
 }
 
@@ -38,6 +42,12 @@ module "workspace-parameters" {
 provider "kubernetes" {
   # Authenticate via ~/.kube/config or a Coder-specific ServiceAccount, depending on admin preferences
   config_path = var.use_kubeconfig == true ? "~/.kube/config" : null
+}
+
+provider "helm" {
+  kubernetes {
+    config_path = var.use_kubeconfig == true ? "~/.kube/config" : null
+  }
 }
 
 data "coder_workspace" "me" {}
@@ -136,6 +146,13 @@ module "region-parameter" {
   source = "./modules/region-parameter"
 }
 
+module "vcluster" {
+  source                = "./modules/vcluster"
+  namespace             = var.namespace
+  workspace_name        = data.coder_workspace.me.name
+  workspace_start_count = data.coder_workspace.me.start_count
+}
+
 data "coder_parameter" "kubeconfig" {
   name         = "kubeconfig"
   display_name = "Kubeconfig"
@@ -150,7 +167,8 @@ data "coder_parameter" "kubeconfig" {
 module "kubernetes-tools" {
   source     = "./modules/kubernetes-tools"
   agent_id   = coder_agent.main.id
-  kubeconfig = data.coder_parameter.kubeconfig.value
+  # If vcluster is enabled, use its kubeconfig, otherwise use the user-provided one
+  kubeconfig = module.vcluster.enabled ? module.vcluster.kubeconfig : data.coder_parameter.kubeconfig.value
 }
 
 module "cnpg-tools" {
@@ -351,13 +369,28 @@ resource "kubernetes_deployment_v1" "main" {
           name              = "dev"
           image             = "codercom/enterprise-node:ubuntu"
           image_pull_policy = "Always"
-          command           = ["sh", "-c", coder_agent.main.init_script]
+          command = ["sh", "-c", <<-EOT
+            # If vcluster is enabled, inject the kubeconfig early so user tools can immediately use it
+            if [ -n "$VCLUSTER_KUBECONFIG" ]; then
+              mkdir -p ~/.kube
+              echo "$VCLUSTER_KUBECONFIG" > ~/.kube/config
+              chmod 600 ~/.kube/config
+              echo "✅ Virtual cluster kubeconfig injected at ~/.kube/config"
+            fi
+            ${coder_agent.main.init_script}
+          EOT
+          ]
           security_context {
             run_as_user = "1000"
           }
           env {
             name  = "CODER_AGENT_TOKEN"
             value = coder_agent.main.token
+          }
+          # Inject vcluster kubeconfig as env var
+          env {
+            name  = "VCLUSTER_KUBECONFIG"
+            value = module.vcluster.kubeconfig
           }
           resources {
             requests = {

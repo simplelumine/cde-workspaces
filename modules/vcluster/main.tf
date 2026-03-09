@@ -88,6 +88,13 @@ resource "helm_release" "vcluster" {
     value = var.is_ephemeral ? "false" : "auto"
   }
 
+  # CRITICAL: Automatically clean up the vcluster PVC when the workspace is destroyed!
+  # Prevents zombie PVCs from leaking into the host cluster.
+  set {
+    name  = "vcluster.persistence.volumeClaim.retentionPolicy"
+    value = "Delete"
+  }
+
   wait    = true
   timeout = 300
 }

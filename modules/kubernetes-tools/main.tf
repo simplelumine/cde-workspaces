@@ -57,6 +57,20 @@ resource "coder_script" "kubernetes_tools" {
         curl -fsSL "https://github.com/derailed/k9s/releases/download/v$${K9S_VERSION}/k9s_Linux_amd64.tar.gz" | tar xz -C /tmp
         sudo mv /tmp/k9s /usr/local/bin/
       fi
+
+      # Install devspace
+      if ! command -v devspace >/dev/null 2>&1; then
+        curl -fsSL -o devspace "https://github.com/loft-sh/devspace/releases/latest/download/devspace-linux-amd64"
+        chmod +x devspace
+        sudo mv devspace /usr/local/bin/
+      fi
+
+      # Install skaffold
+      if ! command -v skaffold >/dev/null 2>&1; then
+        curl -fsSL -o skaffold "https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64"
+        chmod +x skaffold
+        sudo mv skaffold /usr/local/bin/
+      fi
     fi
 
     if [ -n "${var.kubeconfig}" ]; then

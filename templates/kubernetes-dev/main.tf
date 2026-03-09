@@ -54,7 +54,7 @@ locals {
   workspace_namespace = lower("coder-${data.coder_workspace_owner.me.name}-${data.coder_workspace.me.name}")
 }
 
-resource "kubernetes_namespace" "workspace" {
+resource "kubernetes_namespace_v1" "workspace" {
   metadata {
     name = local.workspace_namespace
     labels = {
@@ -188,7 +188,7 @@ module "github-tools" {
 
 module "vcluster" {
   source                = "./modules/vcluster"
-  namespace             = kubernetes_namespace.workspace.metadata.0.name
+  namespace             = kubernetes_namespace_v1.workspace.metadata.0.name
   workspace_name        = data.coder_workspace.me.name
   workspace_start_count = data.coder_workspace.me.start_count
   is_ephemeral          = module.workspace-parameters.is_ephemeral
@@ -260,7 +260,7 @@ resource "kubernetes_persistent_volume_claim_v1" "home" {
   count = module.workspace-parameters.is_ephemeral ? 0 : 1
   metadata {
     name      = "coder-${data.coder_workspace.me.id}-home"
-    namespace = kubernetes_namespace.workspace.metadata.0.name
+    namespace = kubernetes_namespace_v1.workspace.metadata.0.name
     labels = {
       "app.kubernetes.io/name"     = "coder-pvc"
       "app.kubernetes.io/instance" = "coder-pvc-${data.coder_workspace.me.id}"
@@ -296,7 +296,7 @@ resource "kubernetes_deployment_v1" "main" {
   wait_for_rollout = false
   metadata {
     name      = "coder-${data.coder_workspace.me.id}"
-    namespace = kubernetes_namespace.workspace.metadata.0.name
+    namespace = kubernetes_namespace_v1.workspace.metadata.0.name
     labels = {
       "app.kubernetes.io/name"     = "coder-workspace"
       "app.kubernetes.io/instance" = "coder-workspace-${data.coder_workspace.me.id}"

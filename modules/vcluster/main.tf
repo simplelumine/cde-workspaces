@@ -54,32 +54,6 @@ locals {
 }
 
 # ============================================================================
-# Create PVC for vcluster outside of Helm to survive workspace Stop/Start
-# ============================================================================
-
-resource "kubernetes_persistent_volume_claim" "vcluster_data" {
-  count = local.enabled && !var.is_ephemeral ? 1 : 0
-
-  metadata {
-    name      = "${local.vcluster_name}-data"
-    namespace = var.namespace
-    labels = {
-      "app" = local.vcluster_name
-    }
-  }
-
-  spec {
-    access_modes = ["ReadWriteOnce"]
-    storage_class_name = "local-path"
-    resources {
-      requests = {
-        storage = "10Gi" # Dedicated 10GB for vcluster data
-      }
-    }
-  }
-}
-
-# ============================================================================
 # Deploy vcluster via Helm (only when enabled and workspace is running)
 # ============================================================================
 
@@ -107,21 +81,20 @@ resource "helm_release" "vcluster" {
     value = "${local.vcluster_name}.${var.namespace}.svc.cluster.local"
   }
 
-  # If not ephemeral, use the explicitly created PVC to ensure data persistence
+  # Toggle persistence based on storage tier
   set {
     name  = "controlPlane.statefulSet.persistence.volumeClaim.enabled"
     value = var.is_ephemeral ? "false" : "true"
   }
-  
-  set {
-    name  = "controlPlane.statefulSet.persistence.volumeClaim.existingClaim"
-    value = try(kubernetes_persistent_volume_claim.vcluster_data[0].metadata[0].name, "")
-  }
 
-  # Note: retentionPolicy is NOT set to Delete. 
-  # This ensures that when the workspace is "stopped" (count=0 -> helm uninstalls),
-  # K8s retains the PVC. Upon restart, Helm reattaches to the existing PVC, saving data!
-  # Zombie PVCs are prevented because the parent Namespace itself is deleted upon Workspace termination.
+  # Data persistence strategy:
+  # We do NOT set retentionPolicy=Delete and do NOT use existingClaim.
+  # Instead, we rely on Kubernetes' native StatefulSet behavior:
+  #   - StatefulSet PVCs are NOT deleted when the StatefulSet is removed (helm uninstall).
+  #   - When the workspace restarts (helm install), the new StatefulSet automatically
+  #     finds and reattaches to the existing PVC with the matching name.
+  #   - When the workspace is fully DELETED, the parent Namespace is destroyed,
+  #     which cascades and cleans up all PVCs — no zombie resources.
 
   wait    = true
   timeout = 300

@@ -74,10 +74,7 @@ resource "helm_release" "vcluster" {
     name  = "vcluster.resources.requests.memory"
     value = "256Mi"
   }
-  set {
-    name  = "vcluster.resources.limits.memory"
-    value = "1Gi"
-  }
+
 
   # Add TLS SAN for in-cluster service DNS access
   set {

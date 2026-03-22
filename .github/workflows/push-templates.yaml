@@ -75,10 +75,13 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Setup Coder CLI
-        uses: coder/setup-action@v1
-        with:
-          access_url: ${{ vars.CODER_URL }}
-          coder_session_token: ${{ secrets.CODER_SESSION_TOKEN }}
+        run: |
+          # Install coder CLI from official GitHub Releases (bypasses self-hosted server download)
+          curl -fsSL https://coder.com/install.sh | sh
+          # Export auth environment variables for subsequent steps
+          echo "CODER_URL=${{ vars.CODER_URL }}" >> "$GITHUB_ENV"
+          echo "CODER_SESSION_TOKEN=${{ secrets.CODER_SESSION_TOKEN }}" >> "$GITHUB_ENV"
+          coder version
 
       - name: Push and Update ${{ matrix.template }} template
         run: |

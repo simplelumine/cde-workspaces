@@ -81,6 +81,12 @@ resource "helm_release" "vcluster" {
     value = "${local.vcluster_name}.${var.namespace}.svc.cluster.local"
   }
 
+  # Enable syncing of Host StorageClasses so users can create PVCs inside vcluster
+  set {
+    name  = "sync.fromHost.storageClasses.enabled"
+    value = "true"
+  }
+
   # Toggle persistence based on storage tier
   set {
     name  = "controlPlane.statefulSet.persistence.volumeClaim.enabled"

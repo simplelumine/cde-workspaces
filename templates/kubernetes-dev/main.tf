@@ -416,11 +416,10 @@ resource "kubernetes_deployment_v1" "main" {
             }
           }
 
-          // Prefer scheduling to the user's selected region
+          // Hard-pin the workspace to the user's selected location
           node_affinity {
-            preferred_during_scheduling_ignored_during_execution {
-              weight = 100
-              preference {
+            required_during_scheduling_ignored_during_execution {
+              node_selector_term {
                 match_expressions {
                   key      = "topology.kubernetes.io/region"
                   operator = "In"

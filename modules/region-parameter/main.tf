@@ -6,12 +6,12 @@ terraform {
   }
 }
 
-data "coder_parameter" "region_preference" {
-  name         = "region_preference"
-  display_name = "Region Preference"
-  description  = "Select your preferred region for the workspace. The scheduler will attempt to place your workspace on a node in this region. If no capacity is available, it will fall back to other regions."
+data "coder_parameter" "location" {
+  name         = "location"
+  display_name = "Location"
+  description  = "Select the location for your workspace. Choose the node closest to you for the lowest typing latency. If no capacity is available here, the workspace will fail to start."
   default      = "lax"
-  icon         = "/emojis/1f310.png"
+  icon         = "/emojis/1f4cd.png"
   mutable      = true
 
   option {
@@ -33,6 +33,6 @@ data "coder_parameter" "region_preference" {
 }
 
 output "value" {
-  description = "The selected region preference value from the Coder UI"
-  value       = data.coder_parameter.region_preference.value
+  description = "The selected location value from the Coder UI"
+  value       = data.coder_parameter.location.value
 }

@@ -19,16 +19,12 @@ data "coder_parameter" "instance_type" {
     value = "lite"
   }
   option {
-    name  = "Flash (3 Cores, 3 GB RAM)"
+    name  = "Flash (4 Cores, 4 GB RAM)"
     value = "flash"
   }
   option {
-    name  = "Pro (4 Cores, 4 GB RAM)"
+    name  = "Pro (4 Cores, 6 GB RAM)"
     value = "pro"
-  }
-  option {
-    name  = "Ultra (4 Cores, 6 GB RAM)"
-    value = "ultra"
   }
 }
 
@@ -60,15 +56,13 @@ data "coder_parameter" "storage_tier" {
 locals {
   cpu_map = {
     "lite"  = "2"
-    "flash" = "3"
+    "flash" = "4"
     "pro"   = "4"
-    "ultra" = "4"
   }
   memory_map = {
     "lite"  = "2"
-    "flash" = "3"
-    "pro"   = "4"
-    "ultra" = "6"
+    "flash" = "4"
+    "pro"   = "6"
   }
   disk_size_map = {
     "ephemeral" = "0"

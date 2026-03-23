@@ -27,11 +27,6 @@ variable "workspace_start_count" {
   description = "The start count of the workspace (0 when stopped, 1 when running)"
 }
 
-variable "is_ephemeral" {
-  type        = bool
-  description = "Whether the virtual cluster should run in ephemeral mode (no persistent storage)"
-  default     = false
-}
 
 # ============================================================================
 # Parameter Toggle
@@ -87,10 +82,10 @@ resource "helm_release" "vcluster" {
     value = "true"
   }
 
-  # Toggle persistence based on storage tier
+  # Always enable persistence for vcluster control plane data
   set {
     name  = "controlPlane.statefulSet.persistence.volumeClaim.enabled"
-    value = var.is_ephemeral ? "false" : "true"
+    value = "true"
   }
 
   # Data persistence strategy:

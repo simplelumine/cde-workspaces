@@ -31,25 +31,25 @@ data "coder_parameter" "instance_type" {
 data "coder_parameter" "storage_tier" {
   name         = "storage_tier"
   display_name = "Storage Tier"
-  description  = "Select the storage volume for /home/coder. Ephemeral mode uses no persistent volume — all data is lost when the workspace stops, but allows free region migration."
-  default      = "standard"
+  description  = "Select the persistent storage volume size for /home/coder"
+  default      = "lite"
   icon         = "/emojis/1f4be.png"
   mutable      = false
 
   option {
-    name        = "Ephemeral (No Disk)"
-    description = "⚠️ DATA LOST ON STOP. Best for quick PR reviews. Allows region migration."
-    value       = "ephemeral"
+    name        = "Lite (10 GB)"
+    description = "Lightweight persistent storage for everyday development."
+    value       = "lite"
   }
   option {
-    name        = "Standard (10 GB)"
-    description = "Persistent home directory for daily development."
-    value       = "standard"
+    name        = "Flash (30 GB)"
+    description = "Balanced storage for projects with heavy dependencies and builds."
+    value       = "flash"
   }
   option {
-    name        = "Expanded (30 GB)"
-    description = "Large persistent storage for heavy dependencies and heavy builds."
-    value       = "expanded"
+    name        = "Pro (50 GB)"
+    description = "Maximum storage for monorepos, large datasets, and intensive workloads."
+    value       = "pro"
   }
 }
 
@@ -65,9 +65,9 @@ locals {
     "pro"   = "6"
   }
   disk_size_map = {
-    "ephemeral" = "0"
-    "standard"  = "10"
-    "expanded"  = "30"
+    "lite"     = "10"
+    "flash"    = "30"
+    "pro"      = "50"
   }
 }
 
@@ -86,7 +86,3 @@ output "home_disk_size" {
   value       = local.disk_size_map[data.coder_parameter.storage_tier.value]
 }
 
-output "is_ephemeral" {
-  description = "Whether the workspace uses ephemeral (non-persistent) storage"
-  value       = data.coder_parameter.storage_tier.value == "ephemeral"
-}

@@ -190,7 +190,6 @@ resource "coder_app" "code-server" {
 }
 
 resource "kubernetes_persistent_volume_claim_v1" "home" {
-  count = module.workspace-parameters.is_ephemeral ? 0 : 1
   metadata {
     name      = "coder-${data.coder_workspace.me.id}-home"
     namespace = var.namespace
@@ -315,17 +314,9 @@ resource "kubernetes_deployment_v1" "main" {
         volume {
           name = "home"
 
-          dynamic "persistent_volume_claim" {
-            for_each = module.workspace-parameters.is_ephemeral ? [] : [1]
-            content {
-              claim_name = kubernetes_persistent_volume_claim_v1.home[0].metadata.0.name
-              read_only  = false
-            }
-          }
-
-          dynamic "empty_dir" {
-            for_each = module.workspace-parameters.is_ephemeral ? [1] : []
-            content {}
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim_v1.home.metadata.0.name
+            read_only  = false
           }
         }
 

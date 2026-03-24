@@ -48,6 +48,7 @@ resource "coder_agent" "main" {
   arch           = "amd64"
   startup_script = <<-EOT
     set -e
+    mkdir -p /home/coder/projects
     # Ensure .bashrc exists
     touch ~/.bashrc
 

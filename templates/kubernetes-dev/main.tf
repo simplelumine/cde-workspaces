@@ -77,6 +77,7 @@ resource "coder_agent" "main" {
   arch           = "amd64"
   startup_script = <<-EOT
     set -e
+    mkdir -p /home/coder/projects
     # Ensure .bashrc exists and expose user bin for pip installations
     touch ~/.bashrc
     if ! grep -q "export PATH=\$PATH:~/.local/bin" ~/.bashrc; then

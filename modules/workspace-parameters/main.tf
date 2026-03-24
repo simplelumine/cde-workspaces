@@ -19,7 +19,7 @@ data "coder_parameter" "instance_type" {
     value = "lite"
   }
   option {
-    name  = "Flash (4 Cores, 4 GB RAM)"
+    name  = "Flash (3 Cores, 4 GB RAM)"
     value = "flash"
   }
   option {
@@ -56,7 +56,7 @@ data "coder_parameter" "storage_tier" {
 locals {
   cpu_map = {
     "lite"  = "2"
-    "flash" = "4"
+    "flash" = "3"
     "pro"   = "4"
   }
   memory_map = {

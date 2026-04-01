@@ -66,13 +66,13 @@ resource "coder_script" "kubernetes_tools" {
       fi
     fi
 
-    if [ -n "${var.kubeconfig}" ]; then
+    KUBECONFIG_B64="${base64encode(var.kubeconfig)}"
+    if [ -n "$KUBECONFIG_B64" ]; then
       echo "Injecting kubeconfig..."
       mkdir -p ~/.kube
-      cat > ~/.kube/config <<'KUBECONFIG_EOF'
-${var.kubeconfig}
-KUBECONFIG_EOF
+      echo "$KUBECONFIG_B64" | base64 -d > ~/.kube/config
       chmod 600 ~/.kube/config
+      echo "✅ Kubeconfig injected at ~/.kube/config"
     fi
   EOT
 }

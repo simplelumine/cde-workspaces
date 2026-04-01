@@ -274,6 +274,13 @@ module "github-upload-public-key" {
   external_auth_id = data.coder_external_auth.github.id
 }
 
+module "gemini" {
+  count    = data.coder_workspace.me.start_count
+  source   = "./modules/gemini"
+  agent_id = coder_agent.main.id
+  folder   = "/home/coder/projects"
+}
+
 # code-server
 resource "coder_app" "code-server" {
   agent_id     = coder_agent.main.id
@@ -390,9 +397,9 @@ resource "kubernetes_deployment_v1" "main" {
           image_pull_policy = "Always"
           command = ["sh", "-c", <<-EOT
             # If vcluster is enabled, inject the kubeconfig early so user tools can immediately use it
-            if [ -n "$VCLUSTER_KUBECONFIG" ]; then
+            if [ -n "$VCLUSTER_KUBECONFIG_B64" ]; then
               mkdir -p ~/.kube
-              echo "$VCLUSTER_KUBECONFIG" > ~/.kube/config
+              echo "$VCLUSTER_KUBECONFIG_B64" | base64 -d > ~/.kube/config
               chmod 600 ~/.kube/config
               echo "✅ Virtual cluster kubeconfig injected at ~/.kube/config"
             fi
@@ -406,10 +413,10 @@ resource "kubernetes_deployment_v1" "main" {
             name  = "CODER_AGENT_TOKEN"
             value = coder_agent.main.token
           }
-          # Inject vcluster kubeconfig as env var
+          # Inject vcluster kubeconfig as base64-encoded env var
           env {
-            name  = "VCLUSTER_KUBECONFIG"
-            value = module.vcluster.kubeconfig
+            name  = "VCLUSTER_KUBECONFIG_B64"
+            value = base64encode(module.vcluster.kubeconfig)
           }
           resources {
             requests = {

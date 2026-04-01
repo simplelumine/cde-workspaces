@@ -239,6 +239,13 @@ module "github-upload-public-key" {
   external_auth_id = data.coder_external_auth.github.id
 }
 
+module "gemini" {
+  count    = data.coder_workspace.me.start_count
+  source   = "./modules/gemini"
+  agent_id = coder_agent.main.id
+  folder   = "/home/coder/projects"
+}
+
 # code-server
 resource "coder_app" "code-server" {
   agent_id     = coder_agent.main.id

@@ -30,11 +30,16 @@ resource "coder_script" "cnpg_tools" {
     #!/bin/bash
     set -e
 
-    if [ "${data.coder_parameter.install_cnpg_plugin.value}" = "true" ]; then
-      echo "Installing CloudNativePG kubectl plugin..."
-      if ! command -v kubectl-cnpg >/dev/null 2>&1; then
-        curl -sSfL "https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/main/hack/install-cnpg-plugin.sh" | sudo sh -s -- -b /usr/local/bin
-      fi
+    if [ "${data.coder_parameter.install_cnpg_plugin.value}" != "true" ]; then
+      echo "CNPG plugin installation skipped (disabled)."
+      exit 0
+    fi
+
+    echo "Installing CloudNativePG kubectl plugin..."
+    if ! command -v kubectl-cnpg >/dev/null 2>&1; then
+      curl -sSfL "https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/main/hack/install-cnpg-plugin.sh" | sh -s -- -b /usr/local/bin
+    else
+      echo "kubectl-cnpg already installed."
     fi
   EOT
 }

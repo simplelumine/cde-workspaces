@@ -37,7 +37,11 @@ resource "coder_script" "cnpg_tools" {
 
     echo "Installing CloudNativePG kubectl plugin..."
     if ! command -v kubectl-cnpg >/dev/null 2>&1; then
-      curl -sSfL "https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/main/hack/install-cnpg-plugin.sh" | sh -s -- -b /usr/local/bin
+      CNPG_VERSION=$(curl -sI https://github.com/cloudnative-pg/cloudnative-pg/releases/latest | awk -F/ '/^location:/ || /^Location:/ {print $NF}' | tr -d '\r' | sed 's/^v//')
+      ARCH=$(uname -m)
+      curl -fsSL "https://github.com/cloudnative-pg/cloudnative-pg/releases/download/v$${CNPG_VERSION}/kubectl-cnpg_$${CNPG_VERSION}_linux_$${ARCH}.tar.gz" | tar xz -C /tmp
+      sudo mv /tmp/kubectl-cnpg /usr/local/bin/
+      echo "✅ kubectl-cnpg v$${CNPG_VERSION} installed."
     else
       echo "kubectl-cnpg already installed."
     fi

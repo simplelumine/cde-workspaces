@@ -162,8 +162,8 @@ module "antigravity" {
   folder = "/home/coder/projects"
 }
 
-module "region-parameter" {
-  source = "./modules/region-parameter"
+module "zone-parameter" {
+  source = "./modules/zone-parameter"
 }
 
 module "kubernetes-tools" {
@@ -419,9 +419,9 @@ resource "kubernetes_deployment_v1" "main" {
             required_during_scheduling_ignored_during_execution {
               node_selector_term {
                 match_expressions {
-                  key      = "topology.kubernetes.io/region"
+                  key      = "topology.kubernetes.io/zone"
                   operator = "In"
-                  values   = [module.region-parameter.value]
+                  values   = [module.zone-parameter.value]
                 }
               }
             }

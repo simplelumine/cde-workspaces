@@ -138,6 +138,17 @@ variable "gemini_system_prompt" {
   default     = ""
 }
 
+data "coder_parameter" "enable_gemini" {
+  name         = "enable_gemini"
+  display_name = "Enable Gemini"
+  description  = "Enable or disable Gemini CLI in this workspace."
+  default      = "false"
+  mutable      = true
+  type         = "bool"
+  icon         = "/icon/gemini.svg"
+  order        = 1
+}
+
 data "coder_parameter" "enable_yolo_mode" {
   name         = "enable_yolo_mode"
   display_name = "Enable YOLO Mode"
@@ -202,7 +213,45 @@ EOT
   folder          = trimsuffix(var.folder, "/")
 }
 
+resource "coder_script" "gemini_install" {
+  count        = data.coder_parameter.enable_gemini.value == "true" ? 0 : 1
+  agent_id     = var.agent_id
+  display_name = "Install Gemini CLI"
+  icon         = var.icon
+  run_on_start = true
+  script       = <<-EOT
+    #!/bin/bash
+    set -o errexit
+    set -o pipefail
+    source "$HOME/.bashrc" 2>/dev/null || true
+
+    if ! command -v node > /dev/null 2>&1 || ! command -v npm > /dev/null 2>&1; then
+      echo "Node.js/npm not available, skipping Gemini CLI install"
+      exit 0
+    fi
+
+    NPM_GLOBAL_PREFIX="$HOME/.npm-global"
+    mkdir -p "$NPM_GLOBAL_PREFIX"
+    npm config set prefix "$NPM_GLOBAL_PREFIX"
+    export PATH="$NPM_GLOBAL_PREFIX/bin:$PATH"
+
+    GEMINI_VERSION='${var.gemini_version}'
+    if [ -n "$GEMINI_VERSION" ]; then
+      npm install -g "@google/gemini-cli@$GEMINI_VERSION"
+    else
+      npm install -g "@google/gemini-cli"
+    fi
+
+    if ! grep -q 'export PATH="$HOME/.npm-global/bin:$PATH"' "$HOME/.bashrc"; then
+      echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.bashrc"
+    fi
+
+    echo "✅ Gemini CLI installed (standalone mode - agentapi not started)"
+  EOT
+}
+
 module "agentapi" {
+  count   = data.coder_parameter.enable_gemini.value == "true" ? 1 : 0
   source  = "registry.coder.com/coder/agentapi/coder"
   version = "2.0.0"
 
@@ -255,5 +304,5 @@ module "agentapi" {
 }
 
 output "task_app_id" {
-  value = module.agentapi.task_app_id
+  value = length(module.agentapi) > 0 ? module.agentapi[0].task_app_id : ""
 }

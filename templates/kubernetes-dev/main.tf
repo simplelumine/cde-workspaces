@@ -162,9 +162,7 @@ module "antigravity" {
   folder = "/home/coder/projects"
 }
 
-module "zone-parameter" {
-  source = "./modules/zone-parameter"
-}
+
 
 module "kubernetes-tools" {
   source     = "./modules/kubernetes-tools"
@@ -371,12 +369,11 @@ resource "kubernetes_deployment_v1" "main" {
 
           resources {
             requests = {
-              "cpu"    = "100m"
-              "memory" = "256Mi"
+              "cpu"    = module.workspace-parameters.request_cpu
+              "memory" = module.workspace-parameters.request_memory
             }
             limits = {
-              "cpu"    = "${module.workspace-parameters.cpu}"
-              "memory" = "${module.workspace-parameters.memory}Gi"
+              "memory" = module.workspace-parameters.limit_memory
             }
           }
           volume_mount {
@@ -414,14 +411,14 @@ resource "kubernetes_deployment_v1" "main" {
             }
           }
 
-          // Hard-pin the workspace to the user's selected location
+          // Pin the workspace to nodes matching the selected tier
           node_affinity {
             required_during_scheduling_ignored_during_execution {
               node_selector_term {
                 match_expressions {
-                  key      = "topology.kubernetes.io/zone"
+                  key      = "tier"
                   operator = "In"
-                  values   = [module.zone-parameter.value]
+                  values   = [module.workspace-parameters.tier]
                 }
               }
             }

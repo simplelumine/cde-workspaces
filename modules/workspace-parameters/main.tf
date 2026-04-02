@@ -6,25 +6,28 @@ terraform {
   }
 }
 
-data "coder_parameter" "instance_type" {
-  name         = "instance_type"
-  display_name = "Instance Type"
-  description  = "Select the compute tier for your workspace (CPU and Memory)"
-  default      = "lite"
+data "coder_parameter" "workspace_tier" {
+  name         = "workspace_tier"
+  display_name = "Workspace Tier"
+  description  = "Select the performance tier for your workspace. This determines which node pool your workspace runs on."
+  default      = "pro"
   icon         = "/icon/k8s.svg"
   mutable      = true
 
   option {
-    name  = "Lite (2 Cores, 2 GB RAM)"
-    value = "lite"
+    name        = "Lite"
+    description = "Basic development tasks, documentation, and light coding."
+    value       = "lite"
   }
   option {
-    name  = "Flash (3 Cores, 4 GB RAM)"
-    value = "flash"
+    name        = "Flash"
+    description = "General-purpose development with moderate resource needs."
+    value       = "flash"
   }
   option {
-    name  = "Pro (4 Cores, 6 GB RAM)"
-    value = "pro"
+    name        = "Pro"
+    description = "Heavy compilation, large projects, and resource-intensive workloads."
+    value       = "pro"
   }
 }
 
@@ -54,35 +57,49 @@ data "coder_parameter" "storage_tier" {
 }
 
 locals {
-  cpu_map = {
-    "lite"  = "2"
-    "flash" = "3"
-    "pro"   = "4"
+  request_cpu_map = {
+    "lite"  = "125m"
+    "flash" = "256m"
+    "pro"   = "375m"
   }
-  memory_map = {
-    "lite"  = "2"
-    "flash" = "4"
-    "pro"   = "6"
+  request_memory_map = {
+    "lite"  = "256Mi"
+    "flash" = "512Mi"
+    "pro"   = "768Mi"
+  }
+  limit_memory_map = {
+    "lite"  = "1.5Gi"
+    "flash" = "3Gi"
+    "pro"   = "5Gi"
   }
   disk_size_map = {
-    "lite"     = "10"
-    "flash"    = "30"
-    "pro"      = "50"
+    "lite"  = "10"
+    "flash" = "20"
+    "pro"   = "30"
   }
 }
 
-output "cpu" {
-  description = "The resolved CPU cores based on instance type"
-  value       = local.cpu_map[data.coder_parameter.instance_type.value]
+output "tier" {
+  description = "The selected workspace tier for node affinity scheduling"
+  value       = data.coder_parameter.workspace_tier.value
 }
 
-output "memory" {
-  description = "The resolved Memory size based on instance type"
-  value       = local.memory_map[data.coder_parameter.instance_type.value]
+output "request_cpu" {
+  description = "The CPU request based on workspace tier"
+  value       = local.request_cpu_map[data.coder_parameter.workspace_tier.value]
+}
+
+output "request_memory" {
+  description = "The memory request based on workspace tier"
+  value       = local.request_memory_map[data.coder_parameter.workspace_tier.value]
+}
+
+output "limit_memory" {
+  description = "The memory limit based on workspace tier"
+  value       = local.limit_memory_map[data.coder_parameter.workspace_tier.value]
 }
 
 output "home_disk_size" {
   description = "The resolved disk size based on storage tier"
   value       = local.disk_size_map[data.coder_parameter.storage_tier.value]
 }
-

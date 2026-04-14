@@ -34,6 +34,10 @@ module "workspace-parameters" {
   source = "./modules/workspace-parameters"
 }
 
+module "zone-parameter" {
+  source = "./modules/zone-parameter"
+}
+
 provider "kubernetes" {
   # Authenticate via ~/.kube/config or a Coder-specific ServiceAccount, depending on admin preferences
   config_path = var.use_kubeconfig == true ? "~/.kube/config" : null
@@ -169,6 +173,7 @@ module "vcluster" {
   namespace             = kubernetes_namespace_v1.workspace.metadata.0.name
   workspace_name        = data.coder_workspace.me.name
   workspace_start_count = data.coder_workspace.me.start_count
+  zone                  = module.zone-parameter.value
 }
 
 data "coder_parameter" "kubeconfig" {
@@ -460,14 +465,14 @@ resource "kubernetes_deployment_v1" "main" {
             }
           }
 
-          // Pin the workspace to nodes matching the selected tier
+          // Pin the workspace to nodes in the selected zone
           node_affinity {
             required_during_scheduling_ignored_during_execution {
               node_selector_term {
                 match_expressions {
-                  key      = "tier"
+                  key      = "topology.kubernetes.io/zone"
                   operator = "In"
-                  values   = [module.workspace-parameters.tier]
+                  values   = [module.zone-parameter.value]
                 }
               }
             }

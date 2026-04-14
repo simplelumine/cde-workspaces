@@ -27,6 +27,11 @@ variable "workspace_start_count" {
   description = "The start count of the workspace (0 when stopped, 1 when running)"
 }
 
+variable "zone" {
+  type        = string
+  description = "The topology zone (e.g. sfo, lax) to pin vcluster components to"
+}
+
 
 # ============================================================================
 # Parameter Toggle
@@ -88,23 +93,36 @@ resource "helm_release" "vcluster" {
     value = "true"
   }
 
-  # Zone-based Pod Affinity: Force vcluster to schedule in the SAME ZONE as the workspace pod.
-  # This prevents cross-region latency without forcing them rigidly onto the exact same node (which causes local-path deadlocks).
+  # Zone-based Node Affinity: Pin vcluster control plane to the same zone as the workspace.
+  # Uses direct nodeAffinity on topology.kubernetes.io/zone instead of podAffinity,
+  # which is simpler and more reliable for public-IP mesh clusters.
   set {
-    name  = "controlPlane.statefulSet.scheduling.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].topologyKey"
+    name  = "controlPlane.statefulSet.scheduling.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key"
     value = "topology.kubernetes.io/zone"
   }
   set {
-    name  = "controlPlane.statefulSet.scheduling.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchExpressions[0].key"
-    value = "app.kubernetes.io/name"
-  }
-  set {
-    name  = "controlPlane.statefulSet.scheduling.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchExpressions[0].operator"
+    name  = "controlPlane.statefulSet.scheduling.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].operator"
     value = "In"
   }
   set {
-    name  = "controlPlane.statefulSet.scheduling.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchExpressions[0].values[0]"
-    value = "coder-workspace"
+    name  = "controlPlane.statefulSet.scheduling.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].values[0]"
+    value = var.zone
+  }
+
+  # Zone-based Node Affinity for CoreDNS: same logic as the control plane above.
+  # CoreDNS runs as a separate Deployment; without this, it can land on a remote node,
+  # causing high DNS latency over the public-IP mesh between nodes.
+  set {
+    name  = "controlPlane.coredns.deployment.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key"
+    value = "topology.kubernetes.io/zone"
+  }
+  set {
+    name  = "controlPlane.coredns.deployment.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].operator"
+    value = "In"
+  }
+  set {
+    name  = "controlPlane.coredns.deployment.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].values[0]"
+    value = var.zone
   }
 
   # Data persistence strategy:

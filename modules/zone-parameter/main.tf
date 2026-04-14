@@ -10,7 +10,6 @@ data "coder_parameter" "location" {
   name         = "location"
   display_name = "Location"
   description  = "Select the location for your workspace. Choose the node closest to you for the lowest typing latency. If no capacity is available here, the workspace will fail to start."
-  default      = "lax"
   icon         = "/emojis/1f4cd.png"
   mutable      = true
 

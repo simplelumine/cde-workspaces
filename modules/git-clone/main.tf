@@ -47,6 +47,11 @@ resource "coder_script" "git_clone" {
       exit 0
     fi
 
+    # Pre-populate known_hosts to avoid "Host key verification failed"
+    mkdir -p ~/.ssh
+    ssh-keyscan -t ed25519,rsa github.com >> ~/.ssh/known_hosts 2>/dev/null
+    ssh-keyscan -t ed25519,rsa gitlab.com >> ~/.ssh/known_hosts 2>/dev/null
+
     mkdir -p "$BASE_DIR"
     cd "$BASE_DIR"
 

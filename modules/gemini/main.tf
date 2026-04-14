@@ -39,7 +39,7 @@ variable "icon" {
 variable "folder" {
   type        = string
   description = "The folder to run Gemini in."
-  default     = "/home/coder"
+  default     = "~"
 }
 
 variable "install_gemini" {

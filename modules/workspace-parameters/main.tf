@@ -34,7 +34,7 @@ data "coder_parameter" "workspace_tier" {
 data "coder_parameter" "storage_tier" {
   name         = "storage_tier"
   display_name = "Storage Tier"
-  description  = "Select the persistent storage volume size for /home/coder"
+  description  = "Select the persistent storage volume size for your home directory"
   default      = "lite"
   icon         = "/emojis/1f4be.png"
   mutable      = false

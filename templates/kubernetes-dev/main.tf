@@ -56,6 +56,9 @@ locals {
   # Provide a dedicated namespace per workspace
   # e.g., "coder-alice-dev"
   workspace_namespace = lower("coder-${data.coder_workspace_owner.me.name}-${data.coder_workspace.me.name}")
+  # Dynamic username: use the Coder account name as the Linux user inside the container
+  username = lower(data.coder_workspace_owner.me.name)
+  home_dir = "/home/${local.username}"
 }
 
 resource "kubernetes_namespace_v1" "workspace" {
@@ -81,7 +84,7 @@ resource "coder_agent" "main" {
   arch           = "amd64"
   startup_script = <<-EOT
     set -e
-    mkdir -p /home/coder/projects
+    mkdir -p ${local.home_dir}/projects
     # Ensure .bashrc exists and expose user bin for pip installations
     touch ~/.bashrc
     if ! grep -q "export PATH=\$PATH:~/.local/bin" ~/.bashrc; then
@@ -163,7 +166,7 @@ module "antigravity" {
   source   = "registry.coder.com/coder/antigravity/coder"
   version  = "1.0.0"
   agent_id = coder_agent.main.id  
-  folder = "/home/coder/projects"
+  folder = "${local.home_dir}/projects"
 }
 
 
@@ -232,7 +235,7 @@ module "git-signing" {
 module "git-clone" {
   source   = "./modules/git-clone"
   agent_id = coder_agent.main.id
-  base_dir = "/home/coder/projects"
+  base_dir = "${local.home_dir}/projects"
 }
 
 module "github-upload-public-key" {
@@ -246,7 +249,7 @@ module "gemini" {
   count    = data.coder_workspace.me.start_count
   source   = "./modules/gemini"
   agent_id = coder_agent.main.id
-  folder   = "/home/coder/projects"
+  folder   = "${local.home_dir}/projects"
 }
 
 # code-server
@@ -255,7 +258,7 @@ resource "coder_app" "code-server" {
   slug         = "code-server"
   display_name = "code-server"
   icon         = "/icon/code.svg"
-  url          = "http://localhost:13337?folder=/home/coder/projects"
+  url          = "http://localhost:13337?folder=${local.home_dir}/projects"
   subdomain    = false
   share        = "owner"
 
@@ -355,20 +358,19 @@ resource "kubernetes_deployment_v1" "main" {
       spec {
         hostname = "dev-${data.coder_workspace.me.name}"
 
-        security_context {
-          run_as_user     = 1000
-          fs_group        = 1000
-          run_as_non_root = true
-        }
-
         container {
           name              = "dev"
           image             = "codercom/enterprise-node:ubuntu"
           image_pull_policy = "Always"
-          command           = ["sh", "-c", coder_agent.main.init_script]
-          security_context {
-            run_as_user = "1000"
-          }
+          command = ["sh", "-c", <<-EOF
+            # Create dynamic user matching the Coder account name
+            sudo useradd ${local.username} --home=${local.home_dir} --shell=/bin/bash --uid=1001 --user-group 2>/dev/null || true
+            sudo chown -R ${local.username}:${local.username} ${local.home_dir}
+
+            # Switch to the dynamic user and run the Coder agent
+            exec sudo --preserve-env=CODER_AGENT_TOKEN -u ${local.username} sh -c '${coder_agent.main.init_script}'
+          EOF
+          ]
           env {
             name  = "CODER_AGENT_TOKEN"
             value = coder_agent.main.token
@@ -384,7 +386,7 @@ resource "kubernetes_deployment_v1" "main" {
             }
           }
           volume_mount {
-            mount_path = "/home/coder"
+            mount_path = local.home_dir
             name       = "home"
             read_only  = false
           }

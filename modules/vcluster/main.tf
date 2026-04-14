@@ -91,19 +91,19 @@ resource "helm_release" "vcluster" {
   # Zone-based Pod Affinity: Force vcluster to schedule in the SAME ZONE as the workspace pod.
   # This prevents cross-region latency without forcing them rigidly onto the exact same node (which causes local-path deadlocks).
   set {
-    name  = "controlPlane.statefulSet.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].topologyKey"
+    name  = "controlPlane.statefulSet.scheduling.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].topologyKey"
     value = "topology.kubernetes.io/zone"
   }
   set {
-    name  = "controlPlane.statefulSet.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchExpressions[0].key"
+    name  = "controlPlane.statefulSet.scheduling.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchExpressions[0].key"
     value = "app.kubernetes.io/name"
   }
   set {
-    name  = "controlPlane.statefulSet.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchExpressions[0].operator"
+    name  = "controlPlane.statefulSet.scheduling.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchExpressions[0].operator"
     value = "In"
   }
   set {
-    name  = "controlPlane.statefulSet.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchExpressions[0].values[0]"
+    name  = "controlPlane.statefulSet.scheduling.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchExpressions[0].values[0]"
     value = "coder-workspace"
   }
 

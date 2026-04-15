@@ -37,14 +37,14 @@ resource "coder_script" "ansible_tools" {
     set -e
 
     if [ "${data.coder_parameter.install_ansible_tools.value}" = "true" ]; then
+      export PATH="$HOME/.local/bin:$PATH"
       if ! command -v ansible >/dev/null 2>&1; then
         echo "Installing Ansible Core..."
         sudo -u coder pip3 install --user ansible-core --break-system-packages
-        export PATH="$HOME/.local/bin:$PATH"
         sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y sshpass
-        echo "Installing Ansible Collections..."
-        ansible-galaxy collection install community.general ansible.posix
       fi
+      echo "Ensuring Ansible Collections..."
+      ansible-galaxy collection install community.general ansible.posix
     fi
 
     if [ -n "${var.ssh_private_key}" ]; then

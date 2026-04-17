@@ -138,8 +138,8 @@ variable "gemini_system_prompt" {
   default     = ""
 }
 
-data "coder_parameter" "enable_gemini" {
-  name         = "enable_gemini"
+data "coder_parameter" "gemini_enable" {
+  name         = "gemini_enable"
   display_name = "Enable Gemini"
   description  = "Enable or disable Gemini CLI in this workspace."
   default      = "false"
@@ -149,8 +149,8 @@ data "coder_parameter" "enable_gemini" {
   order        = 1
 }
 
-data "coder_parameter" "enable_yolo_mode" {
-  name         = "enable_yolo_mode"
+data "coder_parameter" "gemini_yolo_mode" {
+  name         = "gemini_yolo_mode"
   display_name = "Enable YOLO Mode"
   description  = "Enable YOLO mode to automatically approve all tool calls without user confirmation. Use with caution."
   default      = "false"
@@ -214,7 +214,7 @@ EOT
 }
 
 resource "coder_script" "gemini_install" {
-  count        = data.coder_parameter.enable_gemini.value == "true" ? 0 : 1
+  count        = data.coder_parameter.gemini_enable.value == "true" ? 0 : 1
   agent_id     = var.agent_id
   display_name = "Install Gemini CLI"
   icon         = var.icon
@@ -251,7 +251,7 @@ resource "coder_script" "gemini_install" {
 }
 
 module "agentapi" {
-  count   = data.coder_parameter.enable_gemini.value == "true" ? 1 : 0
+  count   = data.coder_parameter.gemini_enable.value == "true" ? 1 : 0
   source  = "registry.coder.com/coder/agentapi/coder"
   version = "2.0.0"
 
@@ -295,7 +295,7 @@ module "agentapi" {
      GEMINI_API_KEY='${data.coder_parameter.gemini_api_key.value}' \
      GOOGLE_API_KEY='${data.coder_parameter.gemini_api_key.value}' \
      GOOGLE_GENAI_USE_VERTEXAI='${var.use_vertexai}' \
-     GEMINI_YOLO_MODE='${data.coder_parameter.enable_yolo_mode.value}' \
+     GEMINI_YOLO_MODE='${data.coder_parameter.gemini_yolo_mode.value}' \
      GEMINI_MODEL='${data.coder_parameter.gemini_model.value}' \
      GEMINI_START_DIRECTORY='${var.folder}' \
      GEMINI_TASK_PROMPT='${var.task_prompt}' \

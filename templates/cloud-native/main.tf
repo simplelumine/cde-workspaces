@@ -197,19 +197,20 @@ data "coder_parameter" "dev_toolchain" {
   display_name = "Dev Toolchain 🛠️"
   description  = "Select which language environments to install dynamically at startup."
   type         = "list(string)"
+  form_type    = "multi-select"
   default      = jsonencode(["golang"])
   mutable      = true
   
   option {
-    value = jsonencode(["golang"])
+    value = "golang"
     name  = "🐹 Go"
   }
   option {
-    value = jsonencode(["python"])
+    value = "python"
     name  = "🐍 Python 3 & pip"
   }
   option {
-    value = jsonencode(["nodejs"])
+    value = "nodejs"
     name  = "🟢 Node.js & npm / yarn"
   }
 }

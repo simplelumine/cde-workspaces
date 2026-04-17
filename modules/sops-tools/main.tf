@@ -13,7 +13,7 @@ variable "agent_id" {
 
 data "coder_parameter" "install_sops_age_tools" {
   name         = "install_sops_age_tools"
-  display_name = "Install SOPS & Age"
+  display_name = "Kubernetes SOPS & Age"
   description  = "Install SOPS and age tools for gitops secret management"
   default      = false
   type         = "bool"

@@ -13,7 +13,7 @@ variable "agent_id" {
 
 data "coder_parameter" "install_cnpg_plugin" {
   name         = "install_cnpg_plugin"
-  display_name = "Install CNPG Plugin"
+  display_name = "Kubernetes CNPG Plugin"
   description  = "Install the CloudNativePG kubectl plugin in the workspace"
   default      = false
   type         = "bool"

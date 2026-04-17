@@ -13,7 +13,7 @@ variable "agent_id" {
 
 data "coder_parameter" "install_terraform_tools" {
   name         = "install_terraform_tools"
-  display_name = "Install Terraform Tools"
+  display_name = "Terraform Tools"
   description  = "Install lightweight terraform binary in the workspace for validation"
   default      = false
   type         = "bool"

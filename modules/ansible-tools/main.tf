@@ -13,7 +13,7 @@ variable "agent_id" {
 
 data "coder_parameter" "install_ansible_tools" {
   name         = "install_ansible_tools"
-  display_name = "Install Ansible Tools"
+  display_name = "Ansible Tools"
   description  = "Install ansible in the workspace"
   default      = false
   type         = "bool"

@@ -13,7 +13,7 @@ variable "agent_id" {
 
 data "coder_parameter" "install_flux_tools" {
   name         = "install_flux_tools"
-  display_name = "Install Flux CLI"
+  display_name = "Kubernetes Flux CLI"
   description  = "Install flux in the workspace"
   default      = false
   type         = "bool"

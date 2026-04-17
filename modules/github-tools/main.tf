@@ -18,7 +18,7 @@ variable "external_auth_id" {
 
 data "coder_parameter" "install_github_cli" {
   name         = "install_github_cli"
-  display_name = "Install GitHub CLI"
+  display_name = "GitHub CLI"
   description  = "Install the official GitHub CLI (gh) and auto-authenticate it with Coder's GitHub OAuth token"
   default      = true
   type         = "bool"

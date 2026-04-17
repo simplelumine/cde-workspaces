@@ -8,7 +8,7 @@ terraform {
 
 data "coder_parameter" "workspace_tier" {
   name         = "workspace_tier"
-  display_name = "Workspace Tier"
+  display_name = "Workspace Resource Tier"
   description  = "Select the performance tier for your workspace. This determines which node pool your workspace runs on."
   default      = "pro"
   icon         = "/icon/k8s.svg"
@@ -33,7 +33,7 @@ data "coder_parameter" "workspace_tier" {
 
 data "coder_parameter" "storage_tier" {
   name         = "storage_tier"
-  display_name = "Storage Tier"
+  display_name = "Workspace Storage Tier"
   description  = "Select the persistent storage volume size for /home/coder"
   default      = "lite"
   icon         = "/emojis/1f4be.png"

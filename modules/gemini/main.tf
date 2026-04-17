@@ -140,7 +140,7 @@ variable "gemini_system_prompt" {
 
 data "coder_parameter" "gemini_enable" {
   name         = "gemini_enable"
-  display_name = "Enable Gemini"
+  display_name = "Gemini Enable"
   description  = "Enable or disable Gemini CLI in this workspace."
   default      = "false"
   mutable      = true
@@ -151,7 +151,7 @@ data "coder_parameter" "gemini_enable" {
 
 data "coder_parameter" "gemini_yolo_mode" {
   name         = "gemini_yolo_mode"
-  display_name = "Enable YOLO Mode"
+  display_name = "Gemini YOLO Mode"
   description  = "Enable YOLO mode to automatically approve all tool calls without user confirmation. Use with caution."
   default      = "false"
   mutable      = true

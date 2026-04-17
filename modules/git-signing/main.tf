@@ -13,7 +13,7 @@ variable "agent_id" {
 
 data "coder_parameter" "git_signing_key" {
   name        = "git_signing_key"
-  display_name = "Git Signing Key (Private)"
+  display_name = "Git Signing Key"
   description = "Paste your private SSH key (e.g. content of ~/.ssh/id_ed25519) to persist git signing verification."
   default     = ""
   mutable     = true

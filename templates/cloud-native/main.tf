@@ -177,24 +177,28 @@ data "coder_parameter" "workspace_mode" {
   default      = "standard"
   type         = "string"
   mutable      = true
+  icon         = "/icon/k8s.svg"
   
   option {
-    value = "standard"
-    name  = "🌐 Standard — Use credentials as provided (no vcluster, no heavy tools)"
+    value       = "standard"
+    name        = "🌐 Standard"
+    description = "Use credentials as provided (no vcluster, no heavy tools)"
   }
   option {
-    value = "sandbox"
-    name  = "🔒 Sandbox — Isolated vcluster (credentials forcefully ignored, pure testing)"
+    value       = "sandbox"
+    name        = "🔒 Sandbox"
+    description = "Isolated vcluster (credentials forcefully ignored, pure testing)"
   }
   option {
-    value = "privileged"
-    name  = "🔥 Privileged — Full production access & heavy SRE toolchain (Flux, CNPG)"
+    value       = "privileged"
+    name        = "🔥 Privileged"
+    description = "Full production access & heavy SRE toolchain (Flux, CNPG)"
   }
 }
 
 data "coder_parameter" "dev_toolchain" {
   name         = "dev_toolchain"
-  display_name = "Dev Toolchain 🛠️"
+  display_name = "🛠️ Dev Toolchain"
   description  = "Select which language environments to install dynamically at startup."
   type         = "list(string)"
   form_type    = "multi-select"
@@ -240,7 +244,7 @@ module "vcluster" {
 
 data "coder_parameter" "kubeconfig" {
   name         = "kubeconfig"
-  display_name = "Kubeconfig"
+  display_name = "Kubernetes Kubeconfig"
   description  = "(Optional) Paste your kubeconfig YAML content. Used in Default and Ops modes; ignored in Dev mode."
   default      = ""
   type         = "string"
@@ -281,13 +285,13 @@ module "flux-tools" {
 
 data "coder_parameter" "ssh_private_key" {
   name         = "ssh_private_key"
-  display_name = "SSH Private Key"
+  display_name = "Ansible SSH Private Key"
   description  = "(Optional) Paste your id_ed25519 private key content for git/ansible via SSH"
   default      = ""
   type         = "string"
   form_type    = "textarea"
   mutable      = true
-  icon         = ""
+  icon         = "/icon/ansible.svg"
 }
 
 module "ansible-tools" {
@@ -298,7 +302,7 @@ module "ansible-tools" {
 
 data "coder_parameter" "sops_age_key" {
   name         = "sops_age_key"
-  display_name = "SOPS Age Key"
+  display_name = "Kubernetes SOPS Age Key"
   description  = "(Optional) Paste your SOPS Age private key content"
   default      = ""
   type         = "string"

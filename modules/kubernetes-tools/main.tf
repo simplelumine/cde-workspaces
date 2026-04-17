@@ -19,7 +19,7 @@ variable "kubeconfig" {
 
 data "coder_parameter" "install_k8s_tools" {
   name         = "install_k8s_tools"
-  display_name = "Install Kubernetes Tools"
+  display_name = "Kubernetes Core Tools"
   description  = "Install kubectl, helm, and k9s in the workspace"
   default      = false
   type         = "bool"

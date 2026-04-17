@@ -19,7 +19,7 @@ data "coder_parameter" "install_cnpg_plugin" {
   type         = "bool"
   mutable      = true
   icon         = "/icon/k8s.png"
-  order        = 4
+  order        = 30
 }
 
 resource "coder_script" "cnpg_tools" {

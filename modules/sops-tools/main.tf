@@ -19,7 +19,7 @@ data "coder_parameter" "install_sops_age_tools" {
   type         = "bool"
   mutable      = true
   icon         = "/icon/k8s.png"
-  order        = 4
+  order        = 30
 }
 
 variable "sops_age_key" {

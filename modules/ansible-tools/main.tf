@@ -19,7 +19,7 @@ data "coder_parameter" "install_ansible_tools" {
   type         = "bool"
   mutable      = true
   icon         = "/icon/ansible.svg"
-  order        = 4
+  order        = 40
 }
 
 variable "ssh_private_key" {

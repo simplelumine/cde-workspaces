@@ -26,7 +26,7 @@ data "coder_parameter" "git_repos" {
   type         = "string"
   icon         = "/icon/git.svg"
   form_type    = "textarea"
-  order        = 5
+  order        = 50
 }
 
 resource "coder_script" "git_clone" {

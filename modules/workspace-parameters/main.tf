@@ -13,7 +13,7 @@ data "coder_parameter" "workspace_tier" {
   default      = "pro"
   icon         = "/icon/k8s.svg"
   mutable      = true
-  order        = 1
+  order        = 10
 
   option {
     name        = "Lite"
@@ -39,7 +39,7 @@ data "coder_parameter" "storage_tier" {
   default      = "lite"
   icon         = "/emojis/1f4be.png"
   mutable      = false
-  order        = 1
+  order        = 10
 
   option {
     name        = "Lite (10 GB)"
@@ -47,12 +47,12 @@ data "coder_parameter" "storage_tier" {
     value       = "lite"
   }
   option {
-    name        = "Flash (30 GB)"
+    name        = "Flash (20 GB)"
     description = "Balanced storage for projects with heavy dependencies and builds."
     value       = "flash"
   }
   option {
-    name        = "Pro (50 GB)"
+    name        = "Pro (30 GB)"
     description = "Maximum storage for monorepos, large datasets, and intensive workloads."
     value       = "pro"
   }

@@ -34,22 +34,17 @@ variable "zone" {
 
 
 # ============================================================================
-# Parameter Toggle
+# Enablement (controlled by parent template, not by this module)
 # ============================================================================
 
-data "coder_parameter" "enable_vcluster" {
-  name         = "enable_vcluster"
-  display_name = "Enable Virtual Cluster"
-  description  = "Launch a dedicated sandboxed Kubernetes cluster alongside your workspace for testing"
-  type         = "bool"
-  default      = "false"
-  icon         = "/icon/k8s.png"
-  mutable      = true
-  order        = 10
+variable "enabled" {
+  type        = bool
+  description = "Whether to deploy the virtual cluster (controlled by workspace mode in the parent template)"
+  default     = false
 }
 
 locals {
-  enabled       = data.coder_parameter.enable_vcluster.value == "true"
+  enabled       = var.enabled
   vcluster_name = "vc-${var.workspace_name}"
 }
 

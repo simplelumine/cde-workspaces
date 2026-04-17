@@ -98,9 +98,11 @@ resource "coder_agent" "main" {
 
   EOT
 
-  env = {
-    GITHUB_TOKEN = data.coder_external_auth.github.access_token
-  }
+  # GITHUB_TOKEN is NOT injected here as a static env var because OAuth tokens
+  # expire after ~8 hours. Instead, the github-tools module configures a dynamic
+  # wrapper that fetches a fresh token on every `gh` invocation via:
+  #   coder external-auth access-token primary-github
+  env = {}
 
   # The following metadata blocks are optional. They are used to display
   # information about your workspace in the dashboard. You can remove them
@@ -245,8 +247,9 @@ module "sops-tools" {
 }
 
 module "github-tools" {
-  source   = "./modules/github-tools"
-  agent_id = coder_agent.main.id
+  source           = "./modules/github-tools"
+  agent_id         = coder_agent.main.id
+  external_auth_id = data.coder_external_auth.github.id
 }
 
 data "coder_external_auth" "github" {

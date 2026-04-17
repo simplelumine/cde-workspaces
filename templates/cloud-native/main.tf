@@ -174,7 +174,7 @@ data "coder_parameter" "workspace_mode" {
   name         = "workspace_mode"
   display_name = "Workspace Mode"
   description  = "Controls security isolation level and which credentials are injected into the workspace."
-  default      = "default"
+  default      = "standard"
   type         = "string"
   mutable      = true
   
@@ -201,15 +201,15 @@ data "coder_parameter" "dev_toolchain" {
   mutable      = true
   
   option {
-    value = "golang"
+    value = jsonencode(["golang"])
     name  = "🐹 Go"
   }
   option {
-    value = "python"
+    value = jsonencode(["python"])
     name  = "🐍 Python 3 & pip"
   }
   option {
-    value = "nodejs"
+    value = jsonencode(["nodejs"])
     name  = "🟢 Node.js & npm / yarn"
   }
 }

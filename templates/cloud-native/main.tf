@@ -186,8 +186,8 @@ data "coder_parameter" "workspace_mode" {
     description = "Use credentials as provided (no vcluster, no heavy tools)"
   }
   option {
-    value       = "sandbox"
-    name        = "🔒 Sandbox"
+    value       = "restricted"
+    name        = "🔒 Restricted"
     description = "Isolated vcluster (credentials forcefully ignored, pure testing)"
   }
   option {
@@ -223,16 +223,16 @@ data "coder_parameter" "dev_toolchain" {
 
 locals {
   mode        = data.coder_parameter.workspace_mode.value
-  is_sandbox  = local.mode == "sandbox"
+  is_restricted  = local.mode == "restricted"
   is_priv     = local.mode == "privileged"
 
   # Credential interception layer:
-  # - sandbox:    ALL external credentials are forcefully stripped; safe vcluster kubeconfig is used.
+  # - restricted: ALL external credentials are forcefully stripped; safe vcluster kubeconfig is used.
   # - standard:   Credentials are passed through as-is (no vcluster).
   # - privileged: Credentials are passed through + heavy SRE tools are installed.
-  safe_kubeconfig = local.is_sandbox ? module.vcluster.kubeconfig : data.coder_parameter.kubeconfig.value
-  safe_ssh_key    = local.is_sandbox ? "" : data.coder_parameter.ssh_private_key.value
-  safe_sops_key   = local.is_sandbox ? "" : data.coder_parameter.sops_age_key.value
+  safe_kubeconfig = local.is_restricted ? module.vcluster.kubeconfig : data.coder_parameter.kubeconfig.value
+  safe_ssh_key    = local.is_restricted ? "" : data.coder_parameter.ssh_private_key.value
+  safe_sops_key   = local.is_restricted ? "" : data.coder_parameter.sops_age_key.value
 }
 
 module "vcluster" {
@@ -241,7 +241,7 @@ module "vcluster" {
   workspace_name        = data.coder_workspace.me.name
   workspace_start_count = data.coder_workspace.me.start_count
   zone                  = module.zone-parameter.value
-  enabled               = local.is_sandbox
+  enabled               = local.is_restricted
 }
 
 data "coder_parameter" "kubeconfig" {

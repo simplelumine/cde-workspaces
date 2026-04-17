@@ -197,7 +197,7 @@ data "coder_parameter" "dev_toolchain" {
   display_name = "Dev Toolchain 🛠️"
   description  = "Select which language environments to install dynamically at startup."
   type         = "list(string)"
-  default      = ["golang"]
+  default      = jsonencode(["golang"])
   mutable      = true
   
   option {

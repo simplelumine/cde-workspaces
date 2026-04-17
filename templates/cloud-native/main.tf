@@ -467,7 +467,7 @@ resource "kubernetes_deployment_v1" "main" {
         }
       }
       spec {
-        hostname = "sre-${data.coder_workspace.me.name}"
+        hostname = "${data.coder_workspace.me.name}"
 
         security_context {
           run_as_user     = 1000

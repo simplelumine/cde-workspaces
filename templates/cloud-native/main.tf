@@ -257,7 +257,7 @@ module "kubernetes-tools" {
 module "dev-tools" {
   source     = "./modules/dev-tools"
   agent_id   = coder_agent.main.id
-  tools_list = data.coder_parameter.dev_toolchain.value
+  tools_list = jsondecode(data.coder_parameter.dev_toolchain.value)
 }
 
 module "cnpg-tools" {

@@ -68,6 +68,7 @@ data "coder_parameter" "gemini_api_key" {
   mutable      = true
   type         = "string"
   icon         = "/icon/gemini.svg"
+  order        = 6
 }
 
 data "coder_parameter" "gemini_base_url" {
@@ -78,6 +79,7 @@ data "coder_parameter" "gemini_base_url" {
   mutable      = true
   type         = "string"
   icon         = "/icon/gemini.svg"
+  order        = 6
 }
 
 variable "use_vertexai" {
@@ -106,6 +108,7 @@ data "coder_parameter" "gemini_model" {
   mutable      = true
   type         = "string"
   icon         = "/icon/gemini.svg"
+  order        = 6
 }
 
 variable "pre_install_script" {
@@ -146,7 +149,7 @@ data "coder_parameter" "gemini_enable" {
   mutable      = true
   type         = "bool"
   icon         = "/icon/gemini.svg"
-  order        = 1
+  order        = 6
 }
 
 data "coder_parameter" "gemini_yolo_mode" {
@@ -157,6 +160,7 @@ data "coder_parameter" "gemini_yolo_mode" {
   mutable      = true
   type         = "bool"
   icon         = "/icon/gemini.svg"
+  order        = 6
 }
 
 resource "coder_env" "gemini_api_key" {

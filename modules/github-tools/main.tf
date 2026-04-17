@@ -24,6 +24,7 @@ data "coder_parameter" "install_github_cli" {
   type         = "bool"
   mutable      = true
   icon         = "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/github.svg"
+  order        = 4
 }
 
 resource "coder_script" "github_tools" {

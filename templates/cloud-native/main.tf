@@ -178,6 +178,7 @@ data "coder_parameter" "workspace_mode" {
   type         = "string"
   mutable      = true
   icon         = "/icon/k8s.svg"
+  order        = 1
   
   option {
     value       = "standard"
@@ -204,6 +205,7 @@ data "coder_parameter" "dev_toolchain" {
   form_type    = "multi-select"
   default      = jsonencode(["golang"])
   mutable      = true
+  order        = 2
   
   option {
     value = "golang"
@@ -251,6 +253,7 @@ data "coder_parameter" "kubeconfig" {
   icon         = "/icon/k8s.png"
   mutable      = true
   form_type    = "textarea"
+  order        = 3
 }
 
 module "kubernetes-tools" {
@@ -292,6 +295,7 @@ data "coder_parameter" "ssh_private_key" {
   form_type    = "textarea"
   mutable      = true
   icon         = "/icon/ansible.svg"
+  order        = 3
 }
 
 module "ansible-tools" {
@@ -309,6 +313,7 @@ data "coder_parameter" "sops_age_key" {
   form_type    = "textarea"
   mutable      = true
   icon         = "/icon/k8s.png"
+  order        = 3
 }
 
 module "sops-tools" {

@@ -13,6 +13,7 @@ data "coder_parameter" "workspace_tier" {
   default      = "pro"
   icon         = "/icon/k8s.svg"
   mutable      = true
+  order        = 1
 
   option {
     name        = "Lite"
@@ -38,6 +39,7 @@ data "coder_parameter" "storage_tier" {
   default      = "lite"
   icon         = "/emojis/1f4be.png"
   mutable      = false
+  order        = 1
 
   option {
     name        = "Lite (10 GB)"

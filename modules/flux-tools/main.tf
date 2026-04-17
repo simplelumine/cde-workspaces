@@ -19,6 +19,7 @@ data "coder_parameter" "install_flux_tools" {
   type         = "bool"
   mutable      = true
   icon         = "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/flux.svg"
+  order        = 4
 }
 
 resource "coder_script" "flux_tools" {

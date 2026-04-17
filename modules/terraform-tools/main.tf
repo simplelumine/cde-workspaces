@@ -19,6 +19,7 @@ data "coder_parameter" "install_terraform_tools" {
   type         = "bool"
   mutable      = true
   icon         = "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/terraform.svg"
+  order        = 4
 }
 
 resource "coder_script" "terraform_tools" {

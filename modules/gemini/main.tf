@@ -307,6 +307,13 @@ module "agentapi" {
    EOT
 }
 
+resource "coder_ai_task" "gemini_task" {
+  count        = data.coder_parameter.gemini_enable.value == "true" ? 1 : 0
+  agent_id     = var.agent_id
+  display_name = "Gemini Automated Agent"
+  task_app_id  = module.agentapi[0].task_app_id
+}
+
 output "task_app_id" {
   value = length(module.agentapi) > 0 ? module.agentapi[0].task_app_id : ""
 }

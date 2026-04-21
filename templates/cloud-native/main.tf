@@ -356,11 +356,14 @@ module "github-upload-public-key" {
   external_auth_id = data.coder_external_auth.github.id
 }
 
+data "coder_task" "me" {}
+
 module "gemini" {
-  count    = data.coder_workspace.me.start_count
-  source   = "./modules/gemini"
-  agent_id = coder_agent.main.id
-  folder   = "/home/coder/projects"
+  count       = data.coder_workspace.me.start_count
+  source      = "./modules/gemini"
+  agent_id    = coder_agent.main.id
+  folder      = "/home/coder/projects"
+  task_prompt = data.coder_task.me.prompt
 }
 
 # code-server

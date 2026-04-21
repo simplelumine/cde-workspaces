@@ -72,5 +72,6 @@ else
   printf "No API key provided (neither GEMINI_API_KEY nor GOOGLE_API_KEY)\n"
 fi
 
-agentapi server --term-width 67 --term-height 1190 -- \
-  bash -c "$(printf '%q ' gemini "${GEMINI_ARGS[@]}")"
+TERM=xterm-256color FORCE_COLOR=1 COLORTERM=truecolor \
+  agentapi server --type=gemini --term-width 67 --term-height 1190 -- \
+  bash -c "TERM=xterm-256color FORCE_COLOR=1 COLORTERM=truecolor $(printf '%q ' gemini "${GEMINI_ARGS[@]}")"

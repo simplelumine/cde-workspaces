@@ -102,9 +102,7 @@ resource "coder_agent" "main" {
   # expire after ~8 hours. Instead, the github-tools module configures a dynamic
   # wrapper that fetches a fresh token on every `gh` invocation via:
   #   coder external-auth access-token primary-github
-  env = {
-    TERM = "xterm-256color"
-  }
+  env = {}
 
   # The following metadata blocks are optional. They are used to display
   # information about your workspace in the dashboard. You can remove them

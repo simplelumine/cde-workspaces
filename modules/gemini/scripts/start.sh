@@ -4,6 +4,8 @@ set -o pipefail
 
 source "$HOME"/.bashrc
 
+export TERM=xterm-256color
+export FORCE_COLOR=1
 command_exists() {
   command -v "$1" > /dev/null 2>&1
 }
